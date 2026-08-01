@@ -1,36 +1,31 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Custom skills, strict coding agents (OpenCode/Antigravity), and configurations synced seamlessly across macOS and WSL2 development environments.
+> Centralized AI workspace: Streamlined curated skills (~95), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
 
-This repository serves as the single source of truth for my personal AI coding assistants. It enforces strict architectural patterns, modern framework standards, and uncompromised code quality across all projects, from high-performance backends to mobile applications.
+This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
 ---
 
 ## 🏗️ Core Engineering Directives
 
-The agents and skills within this workspace operate under a strict, non-negotiable set of engineering principles:
+All AI agents in this workspace operate under strict directives defined in [`AGENTS.md`](file:///home/carludev/.agent/AGENTS.md):
 
-### 1. Code Quality & Architecture (The Foundation)
+1. **Code Quality & Architecture:** Strict adherence to **SOLID**, **KISS**, **SoC**, and **DRY**.
+2. **TypeScript (Strict Mode):** Zero `any` policy.
+3. **Modern Angular (v22+):** Zoneless by default (`provideExperimentalZonelessChangeDetection()`), Signal-driven state (`signal()`, `computed()`, `linkedSignal()`), and `resource()` API.
+4. **Spring Boot (v4.x / 3.5 LTS) & Java (21/25 LTS):** Virtual Threads enabled by default (`spring.threads.virtual.enabled=true`), Spring AI integration, Declarative HTTP clients (`@HttpExchange`), and modern Java idioms.
 
-- **Standards:** Absolute adherence to **SOLID**, **KISS**, **SoC** (Separation of Concerns), and **DRY**.
-- **Pragmatism:** No over-engineering. We don't use a cannon to kill a mosquito.
+---
 
-### 2. TypeScript (Strict Mode)
+## 🛠️ MCP (Model Context Protocol) Integrations
 
-- **Zero `any` Policy:** The use of `any` is strictly prohibited.
-- **Type Safety:** Prioritize abstractions, interfaces, and utility types. Fall back to `unknown` with explicit type guards only when absolutely necessary.
+The workspace configures 5 core MCP servers for both OpenCode and Antigravity:
 
-### 3. Modern Angular (v22+)
-
-- **Signals First:** State management is driven by `computed` and `linkedSignals`.
-- **Reactivity:** Avoid `effect` unless explicitly required for edge-case DOM manipulations.
-- **RxJS Reduction:** Eager architecture for API queries and resource management; avoid RxJS where native Signals solve the problem.
-- **MCP Integration:** Agents must always use MCP to review the latest Angular documentation before implementation.
-
-### 4. Pragmatic NestJS Backend
-
-- **Dynamic Architecture:** Use NestJS's default infrastructure for straightforward APIs to avoid unnecessary boilerplate.
-- **Domain-Driven Design:** Escalate to strict Clean Architecture (Hexagonal, DDD, CQRS) _only_ when business logic complexity demands it.
+- **`context7`**: Official documentation lookup for libraries, frameworks, and SDKs.
+- **`codegraph`**: Graph-based repository symbol search and dependency tracking.
+- **`github`**: PR, issue, and workflow management authenticated via `{env:GITHUB_TOKEN}`.
+- **`memory`**: Long-term persistent memory across chat sessions.
+- **`playwright`**: End-to-end browser testing and UI visual inspection.
 
 ---
 
@@ -38,10 +33,37 @@ The agents and skills within this workspace operate under a strict, non-negotiab
 
 ```text
 ~/.agent/
-├── agents/                 # Custom personas and cognitive architectures
-├── skills/                 # Global tools, scripts, and MCP integrations
-├── .env.template           # Template for API keys and local tokens
-├── .gitignore              # Strict exclusions for Java, Android (.jks), and environments
-├── AGENTS.md               # Global directives and behavioral rules for IAs
+├── skills/                 # ~95 curated skills + 4 custom stack skills
+├── AGENTS.md               # Global directives and behavioral rules for agents
+├── opencode.jsonc          # OpenCode configuration and MCP declarations
+├── mcp.json                # Antigravity shared MCP declarations
+├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
+├── .env                    # Local credentials file (ignored by Git)
+├── setup.sh                # Portable setup script for any machine
 └── README.md               # You are here
 ```
+
+---
+
+## 🚀 Machine Setup Guide
+
+To sync this workspace to a new machine:
+
+1. **Clone the repository:**
+   ```bash
+   git clone git@github.com:lumusitech/AI.join ~/.agent
+   cd ~/.agent
+   ```
+
+2. **Configure environment variables:**
+   ```bash
+   cp .env.template .env
+   # Edit .env and set your GITHUB_TOKEN and tokens
+   ```
+
+3. **Run the setup script:**
+   ```bash
+   ./setup.sh
+   ```
+
+This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
