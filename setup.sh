@@ -60,7 +60,31 @@ rm -rf "${HOME}/.agents"
 rm -rf "${HOME}/.claude"
 rm -rf "${HOME}/temp/antigravity-awesome-skills"
 
-# 5. Summary & Verification
+# 5. MCP package availability check
+echo "🔎 Verifying MCP npm packages..."
+MCP_PACKAGES=(
+  "@astudioplus/codegraph-mcp"
+  "@upstash/context7-mcp"
+  "@modelcontextprotocol/server-github"
+  "@modelcontextprotocol/server-memory"
+  "@playwright/mcp"
+)
+MCP_OK=0
+MCP_FAIL=0
+for pkg in "${MCP_PACKAGES[@]}"; do
+  if npm view "${pkg}" version >/dev/null 2>&1; then
+    echo "  ✅ OK    ${pkg}"
+    MCP_OK=$((MCP_OK + 1))
+  else
+    echo "  ❌ FAIL  ${pkg} (not found in npm registry)"
+    MCP_FAIL=$((MCP_FAIL + 1))
+  fi
+done
+if [ "${MCP_FAIL}" -gt 0 ]; then
+  echo "⚠️  ${MCP_FAIL} MCP package(s) missing. Check your npm registry access."
+fi
+
+# 6. Summary & Verification
 SKILL_COUNT=$(ls -d "${REPO_DIR}/skills"/*/ 2>/dev/null | wc -l || echo "0")
 
 echo ""
@@ -68,6 +92,7 @@ echo "======================================================================"
 echo "🎉 Setup Complete!"
 echo "----------------------------------------------------------------------"
 echo "  • Total Curated Skills: ${SKILL_COUNT}"
+echo "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"

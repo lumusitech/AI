@@ -14,7 +14,7 @@
       "command": [
         "npx",
         "-y",
-        "@codegraph/mcp-server"
+        "@astudioplus/codegraph-mcp"
       ]
     },
     "context7": {
@@ -22,7 +22,7 @@
       "command": [
         "npx",
         "-y",
-        "@context7/mcp-server"
+        "@upstash/context7-mcp"
       ]
     },
     "github": {
@@ -49,7 +49,7 @@
       "command": [
         "npx",
         "-y",
-        "@playwright/mcp-server"
+        "@playwright/mcp"
       ]
     }
   }

@@ -19,13 +19,29 @@ All AI agents in this workspace operate under strict directives defined in [`AGE
 
 ## 🛠️ MCP (Model Context Protocol) Integrations
 
-The workspace configures 5 core MCP servers for both OpenCode and Antigravity:
+The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each runs via `npx -y <package>` (auto-downloads and always uses the latest version):
+
+| Server | npm package | Requires |
+|---|---|---|
+| `codegraph` | `@astudioplus/codegraph-mcp` | — (native binary per platform) |
+| `context7` | `@upstash/context7-mcp` | — |
+| `github` | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` loaded from `~/.agent/.env` |
+| `memory` | `@modelcontextprotocol/server-memory` | — |
+| `playwright` | `@playwright/mcp` | Chromium browser (auto-downloaded on first use) |
 
 - **`context7`**: Official documentation lookup for libraries, frameworks, and SDKs.
 - **`codegraph`**: Graph-based repository symbol search and dependency tracking.
 - **`github`**: PR, issue, and workflow management authenticated via `{env:GITHUB_TOKEN}`.
 - **`memory`**: Long-term persistent memory across chat sessions.
 - **`playwright`**: End-to-end browser testing and UI visual inspection.
+
+### Prerequisites per machine
+
+- **Node.js 18+ and npm** — required by `npx`. Install via `nvm`, your distro package manager, or https://nodejs.org.
+- **Playwright Chromium** — the `@playwright/mcp` server downloads Chromium to `~/.cache/ms-playwright/` automatically on first use. If it ever needs reinstalling: `npx playwright install chromium`.
+- **GitHub token** — `github` MCP requires `GITHUB_TOKEN`; see [Loading Credentials](#-loading-credentials-for-mcp-servers) below.
+
+`setup.sh` verifies all 5 npm packages exist on the machine after setup and reports any that are missing.
 
 ---
 
