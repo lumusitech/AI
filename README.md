@@ -67,3 +67,49 @@ To sync this workspace to a new machine:
    ```
 
 This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
+
+---
+
+## 🔑 Loading Credentials for MCP Servers
+
+MCP servers that require authentication (e.g. `github`) reference tokens through environment variables in `opencode.jsonc`, like `{env:GITHUB_TOKEN}`. OpenCode reads **process environment variables**, not the `.env` file directly — so merely having `GITHUB_TOKEN` in `~/.agent/.env` is **not enough** for the MCP server to pick it up.
+
+`setup.sh` sources `.env` only within its own execution, so it never persists into your shell. You must load `~/.agent/.env` into your shell profile so every new terminal (and every app launched from it, including OpenCode) has the tokens.
+
+### Add to your shell profile
+
+**Zsh** (macOS default, Ubuntu/Debian with zsh, WSL2):
+
+```bash
+# Load ~/.agent/.env credentials (GITHUB_TOKEN, etc.) for opencode MCP servers
+if [ -f "$HOME/.agent/.env" ]; then
+    set -a
+    source "$HOME/.agent/.env"
+    set +a
+fi
+```
+
+Add the block above to `~/.zshrc`.
+
+**Bash** (Ubuntu/Debian default, WSL2 default):
+
+```bash
+# Load ~/.agent/.env credentials (GITHUB_TOKEN, etc.) for opencode MCP servers
+if [ -f "$HOME/.agent/.env" ]; then
+    set -a
+    source "$HOME/.agent/.env"
+    set +a
+fi
+```
+
+Add the block above to `~/.bashrc`.
+
+### Verify
+
+After adding the block, open a **new terminal** and run:
+
+```bash
+echo "GITHUB_TOKEN: ${GITHUB_TOKEN:+set (len=${#GITHUB_TOKEN})}${GITHUB_TOKEN:-not set}"
+```
+
+If it prints `set`, your MCP servers will have access. **Important:** OpenCode must be restarted from a terminal where the variable is loaded for the MCP servers to use it.
