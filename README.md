@@ -38,6 +38,7 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ### Prerequisites per machine
 
 - **Node.js 18+ and npm** — required by `npx`. Install via `nvm`, your distro package manager, or https://nodejs.org.
+- **Bun** — used by OpenCode to install npm plugins declared in `opencode.jsonc` (`"plugin": [...]`). Install via `curl -fsSL https://bun.sh/install | bash` or your package manager.
 - **Playwright Chromium** — the `@playwright/mcp` server downloads Chromium to `~/.cache/ms-playwright/` automatically on first use. If it ever needs reinstalling: `npx playwright install chromium`.
 - **GitHub token** — `github` MCP requires `GITHUB_TOKEN`; see [Loading Credentials](#-loading-credentials-for-mcp-servers) below.
 
@@ -50,14 +51,45 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ```text
 ~/.agent/
 ├── skills/                 # ~95 curated skills + 4 custom stack skills
-├── AGENTS.md               # Global directives and behavioral rules for agents
-├── opencode.jsonc          # OpenCode configuration and MCP declarations
+├── agents/                 # OpenCode custom agents (arquitecto.md, ...)
+├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
+├── extensions/lumusitech/  # Antigravity / Gemini CLI extension (gemini-extension.json)
+├── AGENTS.md               # Global directives for OpenCode agents
+├── GEMINI.md               # Global directives for Gemini CLI / Antigravity
+├── opencode.jsonc          # OpenCode config: MCPs + npm plugins + skills paths
 ├── mcp.json                # Antigravity shared MCP declarations
 ├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
 ├── .env                    # Local credentials file (ignored by Git)
 ├── setup.sh                # Portable setup script for any machine
 └── README.md               # You are here
 ```
+
+---
+
+## 🔌 Plugins & Extensions
+
+### OpenCode plugins
+
+Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode via symlink (`~/.config/opencode/plugins`). Each file is an ESM module exporting a plugin:
+
+| Plugin | Hook | Purpose |
+|---|---|---|
+| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files to prevent secret leaks |
+| `notifications.js` | `event` | Native desktop notification when a session goes idle |
+| `inject-env.js` | `shell.env` | Loads `~/.agent/.env` into every agent shell |
+| `context-compaction.js` | `experimental.session.compacting` | Preserves task state across session compaction |
+
+Third-party npm plugins are declared in `opencode.jsonc` under `"plugin"`:
+- `@tarquinen/opencode-dcp` — prunes obsolete tool outputs from context (saves tokens)
+- `@cortexkit/opencode-magic-context` — cross-session memory and context management
+
+### Antigravity / Gemini CLI extension
+
+`extensions/lumusitech/gemini-extension.json` exposes the 5 shared MCP servers to Gemini CLI / Antigravity and points `contextFileName` at `GEMINI.md`. It is linked via `~/.gemini/extensions/lumusitech`. The MCP servers are also declared in `mcp.json` (linked to `~/.gemini/config/mcp.json`) for broad compatibility.
+
+### OpenCode custom agents
+
+Files in `~/.agent/agents/` are symlinked into `~/.config/opencode/agents/`. Each agent is a Markdown file with frontmatter (`description`, `mode`, `permission`).
 
 ---
 

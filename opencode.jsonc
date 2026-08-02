@@ -3,6 +3,10 @@
   "instructions": [
     "~/.agent/AGENTS.md"
   ],
+  "plugin": [
+    "@tarquinen/opencode-dcp",
+    "@cortexkit/opencode-magic-context"
+  ],
   "skills": {
     "paths": [
       "~/.agent/skills"

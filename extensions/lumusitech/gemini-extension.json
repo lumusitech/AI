@@ -1,0 +1,31 @@
+{
+  "name": "lumusitech",
+  "version": "1.0.0",
+  "description": "Lumusitech global workspace: shared MCP servers and persistent context for Gemini CLI / Antigravity.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "codegraph": {
+      "command": "npx",
+      "args": ["-y", "@astudioplus/codegraph-mcp"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    }
+  }
+}
