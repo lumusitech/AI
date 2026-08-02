@@ -1,6 +1,6 @@
 ---
 name: java-pro
-description: Master Java 21+ with modern features like virtual threads, pattern matching, and Spring Boot 3.x. Expert in the latest Java ecosystem including GraalVM, Project Loom, and cloud-native patterns.
+description: Build Java applications with Spring Boot 3.x/4.x, GraalVM native images, virtual threads, and cloud-native patterns. Use when developing Spring-based services, REST APIs, or enterprise Java backends.
 risk: critical
 source: community
 date_added: '2026-02-27'

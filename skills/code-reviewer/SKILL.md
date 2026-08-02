@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: "Elite code review expert specializing in modern AI-powered code"
+description: "Perform rigorous code reviews of diffs and pull requests: correctness, security, performance, and readability. Use when reviewing a PR, a diff, or specific code for issues before merge."
 risk: critical
 source: community
 date_added: "2026-02-27"

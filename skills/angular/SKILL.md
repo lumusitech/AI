@@ -1,6 +1,6 @@
 ---
 name: angular
-description: Modern Angular (v20+) expert with deep knowledge of Signals, Standalone Components, Zoneless applications, SSR/Hydration, and reactive patterns.
+description: 'Modern Angular (v17-v21) development: components, services, dependency injection, routing, forms, and Standalone Components. Use for general Angular coding, SSR/hydration, or migrating apps to modern patterns.'
 risk: safe
 source: self
 date_added: '2026-02-27'

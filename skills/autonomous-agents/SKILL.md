@@ -1,9 +1,6 @@
 ---
 name: autonomous-agents
-description: Autonomous agents are AI systems that can independently decompose
-  goals, plan actions, execute tools, and self-correct without constant human
-  guidance. The challenge isn't making them capable - it's making them reliable.
-  Every extra decision multiplies failure probability.
+description: Design, build, and orchestrate autonomous AI agents that decompose goals, plan, use tools, and self-correct. Use when implementing agent loops, tool-calling, multi-agent systems, or agent reliability.
 risk: critical
 source: vibeship-spawner-skills (Apache 2.0)
 date_added: 2026-02-27

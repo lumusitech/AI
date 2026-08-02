@@ -1,6 +1,6 @@
 ---
 name: debugging-strategies
-description: "Transform debugging from frustrating guesswork into systematic problem-solving with proven strategies, powerful tools, and methodical approaches."
+description: "Apply systematic debugging methodology: reproduce, isolate, bisect, and root-cause problems with proven strategies and tools. Use when approaching a stubborn bug methodically, before or alongside hands-on debugging."
 risk: safe
 source: community
 date_added: "2026-02-27"

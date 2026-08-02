@@ -1,6 +1,6 @@
 ---
 name: code-review-excellence
-description: "Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative improvement."
+description: "Improve code-review process and culture: constructive feedback, systematic analysis, and collaborative review practices. Use when establishing review workflows, mentoring reviewers, or planning review strategies."
 risk: safe
 source: community
 date_added: "2026-02-27"

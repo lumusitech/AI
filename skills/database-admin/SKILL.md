@@ -1,6 +1,6 @@
 ---
 name: database-admin
-description: Expert database administrator specializing in modern cloud databases, automation, and reliability engineering.
+description: 'Operate and administer databases in production: provisioning, backups, replication, monitoring, and automation for cloud databases. Use for DB operations, incidents, and reliability.'
 risk: critical
 source: community
 date_added: '2026-02-27'

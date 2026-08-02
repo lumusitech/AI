@@ -1,6 +1,6 @@
 ---
 name: java-lts
-description: Java 21 & 25 LTS features, idioms, performance tuning (ZGC, Loom), Record Patterns, Sequenced Collections, and Scoped Values.
+description: 'Java 21 & 25 LTS language features and idioms: Record Patterns, Pattern Matching for switch, Sequenced Collections, Scoped Values, ZGC, and Loom virtual threads. Use for modern Java code style and JVM performance.'
 version: 25.0.0
 last_updated: 2026-08-01
 ---

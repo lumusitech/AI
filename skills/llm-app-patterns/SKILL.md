@@ -1,6 +1,6 @@
 ---
 name: llm-app-patterns
-description: "Production-ready patterns for building LLM applications, inspired by [Dify](https://github.com/langgenius/dify) and industry best practices."
+description: "Production-ready patterns for building LLM applications: RAG, agents, prompt design, tool use, streaming, and evaluation, inspired by [Dify](https://github.com/langgenius/dify). Use when architecting LLM features like chatbots, copilots, or retrieval pipelines."
 risk: critical
 source: community
 date_added: "2026-02-27"

@@ -1,6 +1,6 @@
 ---
 name: agent-memory
-description: A hybrid memory system that provides persistent, searchable knowledge management for AI agents.
+description: 'Use the agentMemory library (webzler/agentMemory): persistent, searchable knowledge management for AI agents. Use when integrating, configuring, or extending this specific agentMemory package.'
 risk: critical
 source: https://github.com/webzler/agentMemory/tree/main/
 source_repo: webzler/agentMemory

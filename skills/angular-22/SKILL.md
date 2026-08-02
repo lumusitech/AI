@@ -1,6 +1,6 @@
 ---
 name: angular-22
-description: Best practices, architecture, state management, and modern UI patterns for Angular 22+ (Zoneless, Signals, Control Flow, LinkedSignal, Resource API).
+description: 'Angular 22+ modern architecture: Zoneless apps, Signals-first state, Control Flow, LinkedSignal, and Resource API. Use when the app targets Angular 22+ or uses cutting-edge reactivity and async resources.'
 version: 22.0.0
 last_updated: 2026-08-01
 ---

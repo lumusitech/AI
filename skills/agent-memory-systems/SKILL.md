@@ -1,9 +1,6 @@
 ---
 name: agent-memory-systems
-description: "Memory is the cornerstone of intelligent agents. Without it, every
-  interaction starts from zero. This skill covers the architecture of agent
-  memory: short-term (context window), long-term (vector stores), and the
-  cognitive architectures that organize them."
+description: "Design and architect AI agent memory systems: context windows, short-term and long-term memory, vector stores, and cognitive architectures. Use when planning how an agent should persist, retrieve, and organize knowledge."
 risk: safe
 source: vibeship-spawner-skills (Apache 2.0)
 date_added: 2026-02-27

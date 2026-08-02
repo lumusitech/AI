@@ -1,6 +1,6 @@
 ---
 name: database-design
-description: "Database design principles and decision-making. Schema design, indexing strategy, ORM selection, serverless databases."
+description: "Database design decisions: schema design, indexing strategy, ORM selection, and serverless database trade-offs. Use when modeling tables, choosing indexes, or picking an ORM for a feature."
 risk: safe
 source: community
 date_added: "2026-02-27"
