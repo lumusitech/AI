@@ -129,3 +129,28 @@ echo "GITHUB_TOKEN: ${GITHUB_TOKEN:+set (len=${#GITHUB_TOKEN})}${GITHUB_TOKEN:-n
 ```
 
 If it prints `set`, your MCP servers will have access. **Important:** OpenCode must be restarted from a terminal where the variable is loaded for the MCP servers to use it.
+
+### ⚠️ `GITHUB_TOKEN` vs `git push --delete` (important)
+
+Once `GITHUB_TOKEN` is exported in your shell, the GitHub CLI credential helper **prefers it over the full OAuth token** stored by `gh auth login`. If your `.env` uses a **fine-grained PAT** (`github_pat_...`), that token often lacks the `Contents: write` permission required to delete remote branches, so `git push --delete origin <branch>` fails with:
+
+```
+remote: Permission to <user>/<repo>.git denied to <user>.
+```
+
+**Fix:** make git ignore `GITHUB_TOKEN`/`GH_TOKEN` and always use gh's stored OAuth token:
+
+```bash
+git config --global credential.https://github.com.helper \
+  '!env -u GITHUB_TOKEN -u GH_TOKEN gh auth git-credential'
+git config --global credential.https://gist.github.com.helper \
+  '!env -u GITHUB_TOKEN -u GH_TOKEN gh auth git-credential'
+```
+
+This is a **per-machine** fix (lives in `~/.gitconfig`, not in this repo), so run it on every machine where you clone this workspace. After applying, verify in a shell that loads `.env`:
+
+```bash
+# in a new terminal where GITHUB_TOKEN is set
+printf 'protocol=https\nhost=github.com\n\n' | git credential fill
+# expect username=lumusitech and password=gho_... (NOT github_pat_...)
+```
