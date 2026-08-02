@@ -1,6 +1,6 @@
 # Skills Directory
 
-**Welcome to the skills folder!** This is where all 179+ specialized AI skills live.
+**Welcome to the skills folder!** This is where 143 specialized AI skills live (95 top-level skills + 48 UI design styles under `design-it/`).
 
 ## 🤔 What Are Skills?
 
@@ -115,7 +115,7 @@ ls skills/ | grep "keyword"
 ```
 
 ### Method 3: Check the main README
-See the [main README](../README.md) for the complete list of all 179+ skills organized by category.
+See the [main README](../README.md) for the complete list of all 143 skills organized by category.
 
 ---
 
