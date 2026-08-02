@@ -36,6 +36,12 @@ mkdir -p "${GEMINI_CONFIG_DIR}"
 echo "🔗 Linking skills to Antigravity global config (${GEMINI_CONFIG_DIR}/skills)..."
 ln -sfn "${REPO_DIR}/skills" "${GEMINI_CONFIG_DIR}/skills"
 
+echo "🔗 Linking skills.json to Antigravity global config (${GEMINI_CONFIG_DIR}/skills.json)..."
+ln -sfn "${REPO_DIR}/skills.json" "${GEMINI_CONFIG_DIR}/skills.json"
+
+echo "🔗 Linking hooks.json to Antigravity global config (${GEMINI_CONFIG_DIR}/hooks.json)..."
+ln -sfn "${REPO_DIR}/hooks.json" "${GEMINI_CONFIG_DIR}/hooks.json"
+
 echo "🔗 Linking mcp.json to Antigravity global config (${GEMINI_CONFIG_DIR}/mcp.json)..."
 ln -sfn "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp.json"
 
@@ -105,6 +111,13 @@ echo "🧹 Cleaning legacy paths (~/.agents, ~/.claude, ~/temp/antigravity-aweso
 rm -rf "${HOME}/.agents"
 rm -rf "${HOME}/.claude"
 rm -rf "${HOME}/temp/antigravity-awesome-skills"
+
+# Remove legacy ~/.gemini/skills (standalone dir outside ~/.gemini/config) that
+# used to hold a duplicate context7-mcp skill colliding with the symlinked copy.
+if [ -d "${HOME}/.gemini/skills" ]; then
+    echo "🧹 Removing legacy ${HOME}/.gemini/skills (duplicate skill source)..."
+    rm -rf "${HOME}/.gemini/skills"
+fi
 
 # 4b. Git credential helper fix (GITHUB_TOKEN vs gh OAuth token)
 # gh auth git-credential prefers GITHUB_TOKEN/GH_TOKEN from the environment over
@@ -186,5 +199,6 @@ echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
 echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"
+echo "  • Antigravity Hooks:    ${GEMINI_CONFIG_DIR}/hooks.json"
 echo "  • MCPs Configured:      context7, codegraph, github, memory, playwright"
 echo "======================================================================"

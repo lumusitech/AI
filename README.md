@@ -51,6 +51,9 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ```text
 ~/.agent/
 ├── skills/                 # ~95 curated skills + 4 custom stack skills
+├── skills.json             # Antigravity explicit skill discovery entry (~/.agent/skills)
+├── hooks.json              # Antigravity lifecycle hooks (env-protection, notifications)
+├── hooks/                  # Hook scripts (env-protection.sh, notify.sh)
 ├── agents/                 # OpenCode custom agents (arquitecto.md, ...)
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
 ├── extensions/lumusitech/  # Antigravity / Gemini CLI extension (gemini-extension.json)
@@ -86,6 +89,33 @@ Third-party npm plugins are declared in `opencode.jsonc` under `"plugin"`:
 ### Antigravity / Gemini CLI extension
 
 `extensions/lumusitech/gemini-extension.json` exposes the 5 shared MCP servers to Gemini CLI / Antigravity and points `contextFileName` at `GEMINI.md`. It is linked via `~/.gemini/extensions/lumusitech`. The MCP servers are also declared in `mcp.json` (linked to `~/.gemini/config/mcp.json`) for broad compatibility.
+
+Antigravity discovers the shared skills through **two redundant mechanisms** (double safety net):
+
+- The `skills` symlink at `~/.gemini/config/skills` → `~/.agent/skills`
+- An explicit `skills.json` at `~/.gemini/config/skills.json` declaring `{ "entries": [{ "path": "~/.agent/skills" }] }`
+
+### Antigravity lifecycle hooks
+
+`hooks.json` (linked to `~/.gemini/config/hooks.json`) ports two of the OpenCode custom plugins to Antigravity's hook system. Hooks receive a JSON payload on stdin and must emit a JSON result on stdout.
+
+| Hook | Event | Script | Behaviour |
+|---|---|---|---|
+| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths and shell commands referencing `.env` |
+| notifications | `Stop` | `hooks/notify.sh` | Sends a native desktop notification when the loop stops |
+
+`inject-env` and `context-compaction` remain **OpenCode-only** — they rely on the OpenCode plugin API (`shell.env`, `experimental.session.compacting`) which has no Antigravity equivalent.
+
+### Extension differences: OpenCode vs Antigravity
+
+| Capability | OpenCode | Antigravity / Gemini |
+|---|---|---|
+| Skills discovery | `skills.paths` in `opencode.jsonc` | `~/.gemini/config/skills` symlink + `skills.json` |
+| MCP servers | `mcp` in `opencode.jsonc` | `mcp.json` + `gemini-extension.json` |
+| Global directives | `AGENTS.md` | `GEMINI.md` |
+| Custom agents | `~/.config/opencode/agents/*.md` | Not supported (CLI/IDE rely on hooks + MCP) |
+| Plugins | JS plugins (`plugins/`) + npm plugins | Not supported — use `hooks.json` |
+| Lifecycle hooks | `tool.execute.*`, `event`, `shell.env`, ... | `hooks.json` (`PreToolUse`, `Stop`, ...) |
 
 ### OpenCode custom agents
 
