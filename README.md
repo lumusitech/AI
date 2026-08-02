@@ -147,7 +147,9 @@ git config --global credential.https://gist.github.com.helper \
   '!env -u GITHUB_TOKEN -u GH_TOKEN gh auth git-credential'
 ```
 
-This is a **per-machine** fix (lives in `~/.gitconfig`, not in this repo), so run it on every machine where you clone this workspace. After applying, verify in a shell that loads `.env`:
+> **Automatic:** `setup.sh` applies this fix for you on every machine (it resolves the real `gh` binary path and configures both `github.com` and `gist.github.com`). You only need the manual commands above if you're not running the setup script.
+
+After applying, verify in a shell that loads `.env`:
 
 ```bash
 # in a new terminal where GITHUB_TOKEN is set

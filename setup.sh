@@ -60,6 +60,23 @@ rm -rf "${HOME}/.agents"
 rm -rf "${HOME}/.claude"
 rm -rf "${HOME}/temp/antigravity-awesome-skills"
 
+# 4b. Git credential helper fix (GITHUB_TOKEN vs gh OAuth token)
+# gh auth git-credential prefers GITHUB_TOKEN/GH_TOKEN from the environment over
+# the full OAuth token stored by `gh auth login`. A fine-grained PAT lacks the
+# `Contents: write` permission needed to delete remote branches, breaking
+# `git push --delete`. Force git to use gh's stored OAuth token.
+if command -v gh >/dev/null 2>&1; then
+    GH_BIN="$(command -v gh)"
+    echo "🔧 Configuring git to use gh OAuth token (ignoring GITHUB_TOKEN/GH_TOKEN)..."
+    git config --global credential.https://github.com.helper \
+      "!env -u GITHUB_TOKEN -u GH_TOKEN ${GH_BIN} auth git-credential"
+    git config --global credential.https://gist.github.com.helper \
+      "!env -u GITHUB_TOKEN -u GH_TOKEN ${GH_BIN} auth git-credential"
+    echo "  ✅ git credential helper: ${GH_BIN}"
+else
+    echo "⚠️  gh CLI not found. Skipping git credential helper config."
+fi
+
 # 5. MCP package availability check
 echo "🔎 Verifying MCP npm packages..."
 MCP_PACKAGES=(
