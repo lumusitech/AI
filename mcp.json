@@ -29,7 +29,10 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
-      ]
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": "~/.agent/memory.jsonl"
+      }
     },
     "playwright": {
       "command": "npx",

@@ -46,7 +46,10 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-memory"
-      ]
+      ],
+      "environment": {
+        "MEMORY_FILE_PATH": "~/.agent/memory.jsonl"
+      }
     },
     "playwright": {
       "type": "local",

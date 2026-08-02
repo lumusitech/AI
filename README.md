@@ -57,6 +57,7 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ├── agents/                 # OpenCode custom agents (arquitecto.md, ...)
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
 ├── extensions/lumusitech/  # Antigravity / Gemini CLI extension (gemini-extension.json)
+├── memory.jsonl            # MCP memory knowledge graph (shared across machines via git)
 ├── AGENTS.md               # Global directives for OpenCode agents
 ├── GEMINI.md               # Global directives for Gemini CLI / Antigravity
 ├── opencode.jsonc          # OpenCode config: MCPs + npm plugins + skills paths
@@ -116,6 +117,22 @@ Antigravity discovers the shared skills through **two redundant mechanisms** (do
 | Custom agents | `~/.config/opencode/agents/*.md` | Not supported (CLI/IDE rely on hooks + MCP) |
 | Plugins | JS plugins (`plugins/`) + npm plugins | Not supported — use `hooks.json` |
 | Lifecycle hooks | `tool.execute.*`, `event`, `shell.env`, ... | `hooks.json` (`PreToolUse`, `Stop`, ...) |
+
+### MCP Memory sync across machines
+
+`memory.jsonl` stores the MCP memory server's knowledge graph (entities, relations, observations). Both OpenCode and Antigravity are configured to use `~/.agent/memory.jsonl` via the `MEMORY_FILE_PATH` environment variable.
+
+Since the file lives inside the repo, it is version-controlled and shared across machines via git:
+
+```bash
+# After a work session, commit memory changes
+cd ~/.agent && git add memory.jsonl && git commit -m "chore: sync memory" && git push
+
+# On the other machine, pull before starting work
+cd ~/.agent && git pull
+```
+
+> **Note:** Only one machine should be active at a time to avoid merge conflicts. The JSONL format makes conflicts hard to resolve automatically.
 
 ### OpenCode custom agents
 
