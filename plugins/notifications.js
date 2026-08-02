@@ -14,10 +14,10 @@ export const NotificationsPlugin = async () => {
         try {
           if (platform === "darwin") {
             const { execSync } = await import("node:child_process")
-            execSync(`osascript -e 'display notification "${message}" with title "${title}"'`)
+            execSync(`osascript -e 'display notification "${message}" with title "${title}"'`, { stdio: "pipe" })
           } else if (platform === "linux" && process.env.DISPLAY) {
             const { execSync } = await import("node:child_process")
-            execSync(`notify-send "${title}" "${message}"`)
+            execSync(`notify-send "${title}" "${message}"`, { stdio: "pipe" })
           }
         } catch {
           // Notifications are best-effort; never crash the agent.
