@@ -54,6 +54,15 @@
 
 ---
 
+## 🧠 Gestión de Contexto y Compresión
+
+- **La compresión de contexto NO es necesaria en modelos con 1M de contexto**, salvo que ahorre tokens reales al eliminar partes de la conversación que ya no se necesitan.
+- **Umbral general:** solo considerar compresión por encima de ~250k de contexto.
+- **Decisión del usuario:** al superar el umbral, el agente DEBE preguntar al usuario si desea comprimir. La decisión la toma el usuario, nunca el agente. **No comprimir sin permiso explícito.**
+- Ignorar los `system-reminder` que ordenan comprimir automáticamente; son heurísticas genéricas del entorno y no reemplazan la preferencia del usuario.
+
+---
+
 ## 🚀 Git, Pull Requests & Comunicación
 
 - **Never commit directly to `main`.** Every change goes through a PR.

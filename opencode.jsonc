@@ -57,7 +57,9 @@
       "command": [
         "npx",
         "-y",
-        "@playwright/mcp"
+        "@playwright/mcp",
+        "--browser",
+        "chromium"
       ]
     }
   }
