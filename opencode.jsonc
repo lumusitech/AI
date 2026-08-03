@@ -49,7 +49,7 @@
         "@modelcontextprotocol/server-memory"
       ],
       "environment": {
-        "MEMORY_FILE_PATH": "~/.agent/memory.jsonl"
+        "MEMORY_FILE_PATH": "{env:HOME}/.agent/memory.jsonl"
       }
     },
     "playwright": {
