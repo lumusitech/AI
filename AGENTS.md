@@ -38,6 +38,7 @@
 
 ### 3. `github` (GitHub Platform Integration)
 - **Directive:** Perform issue tracking, PR reviews, commit inspection, and workflow analysis via `github` MCP using the authenticated `$GITHUB_TOKEN` environment variable.
+- **Do not use the `gh` CLI unless the `github` MCP is unavailable.**
 
 ### 4. `memory` (Long-Term Memory Persistence)
 - **Directive:** Store and recall project insights, user preferences, and architectural decision records (ADRs) using `memory` MCP across chat sessions.
@@ -50,3 +51,12 @@
 ## 📚 Skill Usage & Fresher Rules
 - **Official First:** Prefer native skill definitions and documentation.
 - **No Stale Skills:** Never execute or rely on deprecated framework patterns (e.g., legacy AngularJS, RxJS-heavy Angular, Spring Boot 2.x).
+
+---
+
+## 🚀 Git, Pull Requests & Comunicación
+
+- **Never commit directly to `main`.** Every change goes through a PR.
+- **PRs pequeños y enfocados.** Explicar qué cambió, por qué y cómo se verificó.
+- **Commits:** Mensajes descriptivos en español.
+- **Claridad ante todo:** Si una petición no está clara o falta información, preguntar antes de ejecutar. No asumir requisitos implícitos.
