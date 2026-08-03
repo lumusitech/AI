@@ -3,6 +3,7 @@
   "instructions": [
     "~/.agent/AGENTS.md"
   ],
+  "lsp": true,
   "plugin": [
     "@tarquinen/opencode-dcp",
     "@cortexkit/opencode-magic-context"
