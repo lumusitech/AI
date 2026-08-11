@@ -1,0 +1,26 @@
+{
+  "$comment": "Rate card global por defecto. Copia este archivo a un proyecto como .config/rates/rate-card.json para overrides por proyecto. El skill estimate-costs resuelve: proyecto > global. Nunca el LLM inventa tarifas: si un rol falta, reporta RATE MISSING y pide el dato.",
+  "currency": "USD",
+  "roles": {
+    "tech_lead": {
+      "rate_per_day": 800,
+      "overhead_pct": 0.15
+    },
+    "backend": {
+      "rate_per_day": 600,
+      "overhead_pct": 0.15
+    },
+    "frontend": {
+      "rate_per_day": 600,
+      "overhead_pct": 0.15
+    },
+    "qa": {
+      "rate_per_day": 450,
+      "overhead_pct": 0.1
+    },
+    "pm": {
+      "rate_per_day": 550,
+      "overhead_pct": 0.1
+    }
+  }
+}

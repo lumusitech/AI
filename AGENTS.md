@@ -69,3 +69,25 @@
 - **PRs pequeños y enfocados.** Explicar qué cambió, por qué y cómo se verificó.
 - **Commits:** Mensajes descriptivos en español.
 - **Claridad ante todo:** Si una petición no está clara o falta información, preguntar antes de ejecutar. No asumir requisitos implícitos.
+
+---
+
+## 🗺️ Planificación de Trabajo Mayor a 1 Sesión (Wayfinding)
+
+**Skills vendorizados** en `~/.agent/skills/`: suite Wayfinder (Matt Pocock) + WBS (agent-almanac) + `estimate-costs` (custom).
+
+**Pipeline recomendado** (documento funcional → tickets ejecutables con costos):
+
+1. **`/grill-with-docs`** — extraer decisiones del documento funcional por entrevista (deja `CONTEXT.md` + ADRs).
+2. **`/to-spec`** — conversación → spec en el tracker.
+3. **`/create-work-breakdown-structure`** — deliverables → WBS + WBS-DICTIONARY.md (esfuerzo person-days por work package).
+4. **`/estimate-costs`** — CBS bottom-up con rate card. **Regla dura: el agente NUNCA inventa tarifas**; rate card se resuelve por proyecto (`<repo>/.config/rates/rate-card.json`) y por defecto global (`~/.agent/.config/rates/rate-card.json`). Rol sin tarifa → `RATE MISSING` y preguntar.
+5. **`/to-tickets`** — tickets ejecutables con blocking edges desde el plan.
+
+**Reglas Wayfinder:**
+- **'Plan, don't do'** — los tickets resuelven decisiones, no slices de build. El mapa termina cuando el camino está claro.
+- **1 ticket por sesión** (excepción: `/research`). El frontier = tickets abiertos + desbloqueados + sin reclamar; **claim** el issue antes de trabajar.
+- **Fog of war** → sección *Not yet specified* del mapa; no ticketizar lo que no se ve.
+- Referir mapas/tickets **por nombre**, no por id/URL desnudo.
+
+**Setup por repo:** correr `/setup-matt-pocock-skills` 1 vez por repo (elige tracker: GitHub por defecto, o local files; escribe sección *Wayfinding operations* en el AGENTS.md del repo y `docs/agents/*`).**

@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~95), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
+> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -50,7 +50,14 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 
 ```text
 ~/.agent/
-├── skills/                 # ~95 curated skills + 4 custom stack skills
+├── skills/                 # ~115 curated skills + 4 custom stack + 11 planning skills
+│   ├── wayfinder/          # 🗺️ Wayfinder suite (Matt Pocock): wayfinder, setup-matt-pocock-skills,
+│   │                       #    to-spec, to-tickets, grilling, grill-with-docs, research,
+│   │                       #    implement, triage, ask-matt
+│   ├── create-work-breakdown-structure/  # WBS + WBS Dictionary (agent-almanac)
+│   ├── estimate-costs/     # 📊 CBS bottom-up con rate card (skill custom)
+│   └── ...
+├── .config/rates/          # Global rate card default para estimate-costs
 ├── skills.json             # Antigravity explicit skill discovery entry (~/.agent/skills)
 ├── hooks.json              # Antigravity lifecycle hooks (env-protection, notifications)
 ├── hooks/                  # Hook scripts (env-protection.sh, notify.sh)
@@ -162,6 +169,37 @@ To sync this workspace to a new machine:
    ```
 
 This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
+
+It also verifies the **11 vendored planning skills** are present and can re-fetch them from upstream:
+
+```bash
+./setup.sh                          # verify + configure
+./setup.sh --refresh-vendored-skills # re-clone mattpocock/skills + agent-almanac and copy updates
+```
+
+Vendored planning skills come from two upstream sources (MIT):
+
+| Source | Skills |
+|---|---|
+| [mattpocock/skills](https://github.com/mattpocock/skills) | wayfinder, setup-matt-pocock-skills, to-spec, to-tickets, grilling, grill-with-docs, research, implement, triage, ask-matt |
+| [pjt222/agent-almanac](https://github.com/pjt222/agent-almanac) | create-work-breakdown-structure |
+| Custom | estimate-costs (rate card CBS) |
+
+---
+
+## 🗺️ Planning Workflow (Wayfinding + WBS + Costs)
+
+For work larger than one agent session, the pipeline goes **document → decisions → WBS → costs → tickets**:
+
+1. **`/grill-with-docs`** — interview the functional document, leaving `CONTEXT.md` + ADRs.
+2. **`/to-spec`** — conversation → spec in the tracker.
+3. **`/create-work-breakdown-structure`** — deliverables → WBS + `WBS-DICTIONARY.md` (person-days per work package).
+4. **`/estimate-costs`** — Cost Breakdown Structure using a **rate card**. The agent **never invents rates**: it resolves `<repo>/.config/rates/rate-card.json` → global `~/.agent/.config/rates/rate-card.json`, and flags `RATE MISSING` for unknown roles.
+5. **`/to-tickets`** — executable tickets with blocking edges.
+
+Before using the Wayfinder suite in a repo, run **`/setup-matt-pocock-skills`** once per repo to pick the issue tracker (GitHub by default, or local files) — it writes the *Wayfinding operations* section into the repo's `AGENTS.md`.
+
+Wayfinder rules: **1 ticket per session**, tickets resolve **decisions** (not build slices), and refer to maps/tickets **by name**. See `AGENTS.md` for the full operating rules.
 
 ---
 

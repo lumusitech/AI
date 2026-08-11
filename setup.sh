@@ -136,6 +136,70 @@ else
     echo "⚠️  gh CLI not found. Skipping git credential helper config."
 fi
 
+# 4c. Vendored planning skills (wayfinder suite + WBS + estimate-costs)
+# Skills are committed to this repo under skills/, so a fresh clone already has
+# them. This block (a) verifies presence, and (b) with `--refresh-vendored-skills`
+# re-fetches the vendored copies from their upstream sources so they stay in sync.
+VENDOR_SOURCES=(
+  "mattpocock|wayfinder|https://github.com/mattpocock/skills|skills/engineering/wayfinder"
+  "mattpocock|setup-matt-pocock-skills|https://github.com/mattpocock/skills|skills/engineering/setup-matt-pocock-skills"
+  "mattpocock|to-spec|https://github.com/mattpocock/skills|skills/engineering/to-spec"
+  "mattpocock|to-tickets|https://github.com/mattpocock/skills|skills/engineering/to-tickets"
+  "mattpocock|grilling|https://github.com/mattpocock/skills|skills/productivity/grilling"
+  "mattpocock|grill-with-docs|https://github.com/mattpocock/skills|skills/engineering/grill-with-docs"
+  "mattpocock|research|https://github.com/mattpocock/skills|skills/engineering/research"
+  "mattpocock|implement|https://github.com/mattpocock/skills|skills/engineering/implement"
+  "mattpocock|triage|https://github.com/mattpocock/skills|skills/engineering/triage"
+  "mattpocock|ask-matt|https://github.com/mattpocock/skills|skills/engineering/ask-matt"
+  "agent-almanac|create-work-breakdown-structure|https://github.com/pjt222/agent-almanac|skills/create-work-breakdown-structure"
+)
+
+SKILL_SRC_DIR="${HOME}/.cache/agent-vendor-src"
+VENDOR_OK=0
+VENDOR_MISSING=0
+
+if [ "${1:-}" = "--refresh-vendored-skills" ]; then
+  echo "🔄 Refreshing vendored skills from upstream sources..."
+  for entry in "${VENDOR_SOURCES[@]}"; do
+    IFS='|' read -r ORIGIN NAME REPO SRC_PATH <<< "${entry}"
+    TMP_REPO="${SKILL_SRC_DIR}/$(basename "${REPO}")"
+    git clone --depth 1 --quiet "${REPO}" "${TMP_REPO}" 2>/dev/null || \
+      git -C "${TMP_REPO}" pull --quiet 2>/dev/null || true
+    if [ -f "${TMP_REPO}/${SRC_PATH}/SKILL.md" ]; then
+      rm -rf "${REPO_DIR}/skills/${NAME}"
+      mkdir -p "${REPO_DIR}/skills/${NAME}"
+      cp "${TMP_REPO}/${SRC_PATH}/SKILL.md" "${REPO_DIR}/skills/${NAME}/SKILL.md"
+      for aux in "${TMP_REPO}/${SRC_PATH}"/*.md; do
+        [ -f "${aux}" ] && [ "$(basename "${aux}")" != "SKILL.md" ] && cp "${aux}" "${REPO_DIR}/skills/${NAME}/"
+      done
+      echo "  ✅ ${NAME} ← ${REPO} (${SRC_PATH})"
+    else
+      echo "  ❌ ${NAME}: source not found in ${REPO}"
+    fi
+  done
+fi
+
+echo "🔎 Verifying vendored planning skills..."
+for entry in "${VENDOR_SOURCES[@]}"; do
+  IFS='|' read -r ORIGIN NAME REPO SRC_PATH <<< "${entry}"
+  if [ -f "${REPO_DIR}/skills/${NAME}/SKILL.md" ]; then
+    VENDOR_OK=$((VENDOR_OK + 1))
+  else
+    echo "  ❌ MISSING ${NAME} (run: setup.sh --refresh-vendored-skills)"
+    VENDOR_MISSING=$((VENDOR_MISSING + 1))
+  fi
+done
+# estimate-costs is a custom skill committed to this repo (no upstream source)
+if [ -f "${REPO_DIR}/skills/estimate-costs/SKILL.md" ]; then
+  VENDOR_OK=$((VENDOR_OK + 1))
+else
+  echo "  ❌ MISSING estimate-costs (custom skill)"
+  VENDOR_MISSING=$((VENDOR_MISSING + 1))
+fi
+if [ "${VENDOR_MISSING}" -gt 0 ]; then
+  echo "⚠️  ${VENDOR_MISSING} vendored skill(s) missing."
+fi
+
 # 5. Secret leak check on committed configs
 echo "🔍 Scanning config files for hardcoded secrets..."
 SECRET_PATTERNS=(
@@ -194,6 +258,7 @@ echo "======================================================================"
 echo "🎉 Setup Complete!"
 echo "----------------------------------------------------------------------"
 echo "  • Total Curated Skills: ${SKILL_COUNT}"
+echo "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
 echo "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
@@ -201,4 +266,9 @@ echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
 echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"
 echo "  • Antigravity Hooks:    ${GEMINI_CONFIG_DIR}/hooks.json"
 echo "  • MCPs Configured:      context7, codegraph, github, memory, playwright"
+echo "----------------------------------------------------------------------"
+echo "  💡 Planning pipeline: wayfinder → setup-matt-pocock-skills → to-spec →"
+echo "     create-work-breakdown-structure → estimate-costs → to-tickets"
+echo "  🔄 Update vendored skills:  setup.sh --refresh-vendored-skills"
+echo "  🛠️  Per-repo init: run /setup-matt-pocock-skills once in each repo"
 echo "======================================================================"
