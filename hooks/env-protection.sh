@@ -2,9 +2,9 @@
 # Environment protection hook for Antigravity / Gemini CLI.
 #
 # Blocks file tools (view_file, edit_file, write_file, create_file) from
-# touching any path that contains a `.env` segment, and blocks shell commands
-# that reference `.env` secrets, mirroring the behaviour of the OpenCode
-# `env-protection` plugin.
+# touching any path that contains a `.env` segment, blocks shell commands
+# that reference `.env` secrets, and blocks the `export` shell command,
+# mirroring the behaviour of the OpenCode `env-protection` plugin.
 #
 # Contract: reads a JSON payload from stdin (protojson/camelCase) and writes a
 # JSON decision to stdout.
@@ -13,7 +13,7 @@ set -euo pipefail
 PAYLOAD="$(cat)"
 
 python3 - "${PAYLOAD}" <<'PYEOF'
-import json, sys
+import json, re, sys
 
 raw = sys.argv[1]
 try:
@@ -66,6 +66,12 @@ if name == "run_command":
         print(json.dumps({
             "decision": "deny",
             "reason": "Shell command referencing .env is blocked by the env-protection hook.",
+        }))
+        sys.exit(0)
+    if re.search(r"\bexport\b", lowered):
+        print(json.dumps({
+            "decision": "deny",
+            "reason": "The export command is blocked by the env-protection hook.",
         }))
         sys.exit(0)
 

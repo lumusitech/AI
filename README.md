@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
+> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -50,10 +50,13 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 
 ```text
 ~/.agent/
-├── skills/                 # ~115 curated skills + 4 custom stack + 11 planning skills
+├── skills/                 # ~115 curated skills + 4 custom stack + 13 planning skills
 │   ├── wayfinder/          # 🗺️ Wayfinder suite (Matt Pocock): wayfinder, setup-matt-pocock-skills,
-│   │                       #    to-spec, to-tickets, grilling, grill-with-docs, research,
-│   │                       #    implement, triage, ask-matt
+│   │                       #    to-spec, grilling, grill-with-docs, research, triage
+│   ├── ask-matt/           # 🧭 Router de skills (custom, referencia /plan-phases-implement)
+│   ├── to-tickets/         # 🎫 Tickets con blocking edges (custom, con mecánicas GitHub)
+│   ├── plan-phases-create/ # 📐 Planificación por fases: plan + contratos públicos (custom)
+│   ├── plan-phases-implement/ # 🛠️ Implementa 1 fase por invocación + STOP (custom)
 │   ├── create-work-breakdown-structure/  # WBS + WBS Dictionary (agent-almanac)
 │   ├── estimate-costs/     # 📊 CBS bottom-up con rate card (skill custom)
 │   └── ...
@@ -85,7 +88,7 @@ Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode
 
 | Plugin | Hook | Purpose |
 |---|---|---|
-| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files to prevent secret leaks |
+| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files and the `export` shell command to prevent secret leaks |
 | `notifications.js` | `event` | Native desktop notification when a session goes idle |
 | `inject-env.js` | `shell.env` | Loads `~/.agent/.env` into every agent shell |
 | `context-compaction.js` | `experimental.session.compacting` | Preserves task state across session compaction |
@@ -109,7 +112,7 @@ Antigravity discovers the shared skills through **two redundant mechanisms** (do
 
 | Hook | Event | Script | Behaviour |
 |---|---|---|---|
-| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths and shell commands referencing `.env` |
+| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths, shell commands referencing `.env`, and the `export` command |
 | notifications | `Stop` | `hooks/notify.sh` | Sends a native desktop notification when the loop stops |
 
 `inject-env` and `context-compaction` remain **OpenCode-only** — they rely on the OpenCode plugin API (`shell.env`, `experimental.session.compacting`) which has no Antigravity equivalent.
@@ -170,20 +173,22 @@ To sync this workspace to a new machine:
 
 This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
 
-It also verifies the **11 vendored planning skills** are present and can re-fetch them from upstream:
+It also verifies the **13 planning skills** are present (8 vendored + 5 custom) and can re-fetch the vendored ones from upstream:
 
 ```bash
 ./setup.sh                          # verify + configure
 ./setup.sh --refresh-vendored-skills # re-clone mattpocock/skills + agent-almanac and copy updates
 ```
 
-Vendored planning skills come from two upstream sources (MIT):
+Planning skills come from two upstream sources (MIT) plus custom skills committed to this repo:
 
 | Source | Skills |
 |---|---|
-| [mattpocock/skills](https://github.com/mattpocock/skills) | wayfinder, setup-matt-pocock-skills, to-spec, to-tickets, grilling, grill-with-docs, research, implement, triage, ask-matt |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | wayfinder, setup-matt-pocock-skills, to-spec, grilling, grill-with-docs, research, triage |
 | [pjt222/agent-almanac](https://github.com/pjt222/agent-almanac) | create-work-breakdown-structure |
-| Custom | estimate-costs (rate card CBS) |
+| Custom (never refreshed) | estimate-costs (rate card CBS), to-tickets (con mecánicas GitHub), ask-matt (referencia `/plan-phases-implement`), plan-phases-create, plan-phases-implement |
+
+> **Note:** `to-tickets` and `ask-matt` are vendored upstream but are **customized here**. They were removed from the refresh list so `--refresh-vendored-skills` never overwrites our adaptations.
 
 ---
 
@@ -200,6 +205,13 @@ For work larger than one agent session, the pipeline goes **document → decisio
 Before using the Wayfinder suite in a repo, run **`/setup-matt-pocock-skills`** once per repo to pick the issue tracker (GitHub by default, or local files) — it writes the *Wayfinding operations* section into the repo's `AGENTS.md`.
 
 Wayfinder rules: **1 ticket per session**, tickets resolve **decisions** (not build slices), and refer to maps/tickets **by name**. See `AGENTS.md` for the full operating rules.
+
+### 📐 Phase planning (Research → Plan → Implement)
+
+For a single large task, once the plan/tickets exist, execute it phase by phase:
+
+1. **`/plan-phases-create`** — interviews you, explores the codebase (delegated to subagents), and defines **vertical-slice phases with public contracts**. Optionally produces a `research.md` for large tasks. Writes `.agents/plans/{plan-name}/{plan-name}-plan.md` only after your approval.
+2. **`/plan-phases-implement`** — implements **exactly one phase per invocation**, verifies (typecheck/lint/tests), updates the plan file, and **STOPs** suggesting 3 Spanish commit messages. Never commits or pushes automatically. If a step doesn't fit the plan, it returns to `/plan-phases-create` instead of forcing it.
 
 ---
 

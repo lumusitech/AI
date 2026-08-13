@@ -14,6 +14,12 @@ export const EnvProtectionPlugin = async () => {
           throw new Error("Access to .env files is blocked by the env-protection plugin.")
         }
       }
+      if (input.tool === "bash") {
+        const command = output.args?.command ?? "";
+        if (typeof command === "string" && /\bexport\b/.test(command)) {
+          throw new Error("The export command is blocked by the env-protection plugin.")
+        }
+      }
     },
   }
 }

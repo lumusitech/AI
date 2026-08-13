@@ -136,21 +136,20 @@ else
     echo "⚠️  gh CLI not found. Skipping git credential helper config."
 fi
 
-# 4c. Vendored planning skills (wayfinder suite + WBS + estimate-costs)
-# Skills are committed to this repo under skills/, so a fresh clone already has
-# them. This block (a) verifies presence, and (b) with `--refresh-vendored-skills`
-# re-fetches the vendored copies from their upstream sources so they stay in sync.
+# 4c. Vendored planning skills (wayfinder suite + WBS) and custom skills.
+# Vendored skills are committed to this repo under skills/, so a fresh clone
+# already has them. This block (a) verifies presence, and (b) with
+# `--refresh-vendored-skills` re-fetches the vendored copies from their upstream
+# sources so they stay in sync. Custom skills (estimate-costs, to-tickets,
+# ask-matt, plan-phases-create, plan-phases-implement) are NOT refreshed.
 VENDOR_SOURCES=(
   "mattpocock|wayfinder|https://github.com/mattpocock/skills|skills/engineering/wayfinder"
   "mattpocock|setup-matt-pocock-skills|https://github.com/mattpocock/skills|skills/engineering/setup-matt-pocock-skills"
   "mattpocock|to-spec|https://github.com/mattpocock/skills|skills/engineering/to-spec"
-  "mattpocock|to-tickets|https://github.com/mattpocock/skills|skills/engineering/to-tickets"
   "mattpocock|grilling|https://github.com/mattpocock/skills|skills/productivity/grilling"
   "mattpocock|grill-with-docs|https://github.com/mattpocock/skills|skills/engineering/grill-with-docs"
   "mattpocock|research|https://github.com/mattpocock/skills|skills/engineering/research"
-  "mattpocock|implement|https://github.com/mattpocock/skills|skills/engineering/implement"
   "mattpocock|triage|https://github.com/mattpocock/skills|skills/engineering/triage"
-  "mattpocock|ask-matt|https://github.com/mattpocock/skills|skills/engineering/ask-matt"
   "agent-almanac|create-work-breakdown-structure|https://github.com/pjt222/agent-almanac|skills/create-work-breakdown-structure"
 )
 
@@ -189,13 +188,25 @@ for entry in "${VENDOR_SOURCES[@]}"; do
     VENDOR_MISSING=$((VENDOR_MISSING + 1))
   fi
 done
-# estimate-costs is a custom skill committed to this repo (no upstream source)
-if [ -f "${REPO_DIR}/skills/estimate-costs/SKILL.md" ]; then
-  VENDOR_OK=$((VENDOR_OK + 1))
-else
-  echo "  ❌ MISSING estimate-costs (custom skill)"
-  VENDOR_MISSING=$((VENDOR_MISSING + 1))
-fi
+# Custom skills committed to this repo (no upstream source; never refreshed):
+# estimate-costs, to-tickets (personalized with GitHub mechanics), ask-matt
+# (personalized to reference /plan-phases-implement), plan-phases-create,
+# plan-phases-implement. implement was removed (absorbed into plan-phases-implement).
+CUSTOM_SKILLS=(
+  "estimate-costs"
+  "to-tickets"
+  "ask-matt"
+  "plan-phases-create"
+  "plan-phases-implement"
+)
+for skill in "${CUSTOM_SKILLS[@]}"; do
+  if [ -f "${REPO_DIR}/skills/${skill}/SKILL.md" ]; then
+    VENDOR_OK=$((VENDOR_OK + 1))
+  else
+    echo "  ❌ MISSING ${skill} (custom skill)"
+    VENDOR_MISSING=$((VENDOR_MISSING + 1))
+  fi
+done
 if [ "${VENDOR_MISSING}" -gt 0 ]; then
   echo "⚠️  ${VENDOR_MISSING} vendored skill(s) missing."
 fi
@@ -269,6 +280,7 @@ echo "  • MCPs Configured:      context7, codegraph, github, memory, playwrigh
 echo "----------------------------------------------------------------------"
 echo "  💡 Planning pipeline: wayfinder → setup-matt-pocock-skills → to-spec →"
 echo "     create-work-breakdown-structure → estimate-costs → to-tickets"
+echo "  📐 Phase planning:    plan-phases-create → plan-phases-implement"
 echo "  🔄 Update vendored skills:  setup.sh --refresh-vendored-skills"
 echo "  🛠️  Per-repo init: run /setup-matt-pocock-skills once in each repo"
 echo "======================================================================"

@@ -66,6 +66,36 @@ Work the **frontier**: any ticket whose blockers are all done. For a purely line
 
 Do NOT close or modify any parent issue.
 
+### 5b. GitHub mechanics (when the tracker is GitHub)
+
+When publishing to GitHub, attach each ticket as a **native sub-issue** of its parent so the dependency graph is visible on the UI, and wire the claim/PR loop into the tickets:
+
+- Confirm the repo: `gh repo view --json nameWithOwner --jq .nameWithOwner`.
+- Create one issue per ticket with `gh issue create` (body: description, acceptance criteria as checkboxes, blockers, and a `Part of #<parent>` line).
+- Attach each ticket as a sub-issue via the REST API:
+
+  ```bash
+  child_id=$(gh api repos/{owner}/{repo}/issues/<child-number> --jq .id)
+  gh api --method POST repos/{owner}/{repo}/issues/<parent-number>/sub_issues \
+    -F sub_issue_id="$child_id"
+  ```
+
+- Update the parent issue with a checklist of its tickets, preserving the original body and appending after `---`:
+
+  ```markdown
+  - [ ] #<child> <ticket title>
+  ```
+
+- Keep the per-ticket "Blocked by" edges even though sub-issues exist — blocking order still gates the frontier.
+
+**Claiming and implementing a ticket (GitHub):**
+
+- Claim a frontier ticket by self-assigning: `gh issue edit <n> --add-assignee @me`.
+- Create a linked branch: `gh issue develop <n> --checkout`.
+- Implement, then update the ticket's acceptance criteria checkboxes with `gh issue edit`.
+- Verify (typecheck/lint/tests), then suggest PR titles. When the user picks one: commit, push, and open the PR closing the ticket — `gh pr create --title "<title>" --body "Closes #<ticket-number>"`. If it is the last remaining ticket, also add `Closes #<parent-number>`.
+- **Never merge the PR yourself.**
+
 <local-ticket-template>
 
 # <NN> — <Ticket title>

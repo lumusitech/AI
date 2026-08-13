@@ -74,7 +74,7 @@
 
 ## 🗺️ Planificación de Trabajo Mayor a 1 Sesión (Wayfinding)
 
-**Skills vendorizados** en `~/.agent/skills/`: suite Wayfinder (Matt Pocock) + WBS (agent-almanac) + `estimate-costs` (custom).
+**Skills en `~/.agent/skills/`**: suite Wayfinder (Matt Pocock, parcialmente vendored) + WBS (agent-almanac) + skills custom (`estimate-costs`, `to-tickets` con mecánicas GitHub, `plan-phases-create`, `plan-phases-implement`).
 
 **Pipeline recomendado** (documento funcional → tickets ejecutables con costos):
 
@@ -82,7 +82,12 @@
 2. **`/to-spec`** — conversación → spec en el tracker.
 3. **`/create-work-breakdown-structure`** — deliverables → WBS + WBS-DICTIONARY.md (esfuerzo person-days por work package).
 4. **`/estimate-costs`** — CBS bottom-up con rate card. **Regla dura: el agente NUNCA inventa tarifas**; rate card se resuelve por proyecto (`<repo>/.config/rates/rate-card.json`) y por defecto global (`~/.agent/.config/rates/rate-card.json`). Rol sin tarifa → `RATE MISSING` y preguntar.
-5. **`/to-tickets`** — tickets ejecutables con blocking edges desde el plan.
+5. **`/to-tickets`** — tickets ejecutables con blocking edges desde el plan (en GitHub: sub-issues nativas, `gh issue develop --checkout`, PR que cierra el issue).
+
+**Pipeline RPI (Research → Plan → Implement)** para ejecutar una tarea grande por fases:
+
+6. **`/plan-phases-create`** — define fases verticales con contratos públicos; produce `research.md` opcional para tareas grandes; escribe el plan en `.agents/plans/` solo tras aprobación.
+7. **`/plan-phases-implement`** — implementa SOLO una fase por invocación, verifica y hace STOP; nunca commitea/pushea automáticamente; sugiere 3 mensajes de commit en español. Si un paso no encaja con el plan, vuelve a `/plan-phases-create` (bucle RPI) en lugar de forzarlo.
 
 **Reglas Wayfinder:**
 - **'Plan, don't do'** — los tickets resuelven decisiones, no slices de build. El mapa termina cuando el camino está claro.
