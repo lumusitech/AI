@@ -4,6 +4,15 @@
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
+### 🌐 Language convention
+
+- **File and folder names:** always English, ASCII (`snake_case` or `kebab-case`). No accents, `ñ`, or spaces.
+- **Code and technical configs** (skills, plugins, hooks, configs): English.
+- **Docs and team-facing communication** (PR comments, commit messages, README sections aimed at the team): Spanish when the team reads Spanish.
+- A new document picks one language for its whole content; do not mix within the same file.
+
+Full directives in [`AGENTS.md`](file:///home/carludev/.agent/AGENTS.md).
+
 ---
 
 ## 🏗️ Core Engineering Directives

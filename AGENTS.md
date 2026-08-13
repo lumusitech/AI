@@ -70,6 +70,13 @@
 - **Commits:** Mensajes descriptivos en español.
 - **Claridad ante todo:** Si una petición no está clara o falta información, preguntar antes de ejecutar. No asumir requisitos implícitos.
 
+### 📝 Convención de idioma
+
+- **Nombres de archivos y carpetas:** siempre en inglés, ASCII (`snake_case` o `kebab-case`). Evitar tildes, `ñ` y espacios. Esto mantiene la búsqueda y ordenación predecibles en cualquier sistema.
+- **Código y configuraciones técnicas** (skills, plugins, hooks, configs): en inglés.
+- **Documentación y comunicaciones** (comentarios de PR, mensajes de commit, secciones de README orientadas al equipo): en español cuando el equipo lo lea en español.
+- Si un documento es nuevo, elegir un idioma para todo su contenido; no mezclar dentro del mismo archivo.
+
 ---
 
 ## 🗺️ Planificación de Trabajo Mayor a 1 Sesión (Wayfinding)
