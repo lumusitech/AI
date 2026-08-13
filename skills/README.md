@@ -2,6 +2,12 @@
 
 > Navegable index of the skills in this workspace. Use this to find the right skill folder quickly. Each skill lives in its own directory (`skills/<name>/SKILL.md`) and is auto-discovered by OpenCode and Antigravity.
 
+## How skills are discovered
+
+- **OpenCode** discovers `SKILL.md` files recursively, so nested category subfolders would work — but Antigravity does **not**.
+- **Antigravity** reads only one level deep (`skills/<name>/SKILL.md`): nested sub-skills (e.g. the 48 `design-it/*` styles) are **not** listed as individual skills there. That is why the layout stays flat and `design-it` acts as a router. Do not reorganize skills into category subfolders.
+- Skills with `disable-model-invocation: true` (currently 10: `ask-matt`, `cyber-audit`, `grill-with-docs`, `plan-phases-create`, `plan-phases-implement`, `setup-matt-pocock-skills`, `to-spec`, `to-tickets`, `triage`, `wayfinder`) are hidden from the model's skill inventory and are only invoked via slash command (`/plan-phases-create`, etc.).
+
 Total: **116 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (13)

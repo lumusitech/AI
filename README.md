@@ -115,6 +115,8 @@ Antigravity discovers the shared skills through **two redundant mechanisms** (do
 - The `skills` symlink at `~/.gemini/config/skills` → `~/.agent/skills`
 - An explicit `skills.json` at `~/.gemini/config/skills.json` declaring `{ "entries": [{ "path": "~/.agent/skills" }] }`
 
+> **Discovery depth:** Antigravity reads skills only one level deep (`skills/<name>/SKILL.md`) and does **not** recurse into category subfolders. OpenCode does recurse. That is why the skills stay in a flat layout with `design-it` acting as a router, and why skills carrying `disable-model-invocation: true` (10 of them) are only reachable via slash command in the IDE. See [`skills/README.md`](skills/README.md#how-skills-are-discovered).
+
 ### Antigravity lifecycle hooks
 
 `hooks.json` (linked to `~/.gemini/config/hooks.json`) ports two of the OpenCode custom plugins to Antigravity's hook system. Hooks receive a JSON payload on stdin and must emit a JSON result on stdout.
