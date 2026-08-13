@@ -191,13 +191,19 @@ done
 # Custom skills committed to this repo (no upstream source; never refreshed):
 # estimate-costs, to-tickets (personalized with GitHub mechanics), ask-matt
 # (personalized to reference /plan-phases-implement), plan-phases-create,
-# plan-phases-implement. implement was removed (absorbed into plan-phases-implement).
+# plan-phases-implement, constitution/checklist/analyze/converge (adapted from
+# github/spec-kit, standalone, no specify CLI). implement was removed
+# (absorbed into plan-phases-implement).
 CUSTOM_SKILLS=(
   "estimate-costs"
   "to-tickets"
   "ask-matt"
   "plan-phases-create"
   "plan-phases-implement"
+  "constitution"
+  "checklist"
+  "analyze"
+  "converge"
 )
 for skill in "${CUSTOM_SKILLS[@]}"; do
   if [ -f "${REPO_DIR}/skills/${skill}/SKILL.md" ]; then

@@ -8,11 +8,15 @@
 - **Antigravity** reads only one level deep (`skills/<name>/SKILL.md`): nested sub-skills (e.g. the 48 `design-it/*` styles) are **not** listed as individual skills there. That is why the layout stays flat and `design-it` acts as a router. Do not reorganize skills into category subfolders.
 - Skills with `disable-model-invocation: true` (currently 10: `ask-matt`, `cyber-audit`, `grill-with-docs`, `plan-phases-create`, `plan-phases-implement`, `setup-matt-pocock-skills`, `to-spec`, `to-tickets`, `triage`, `wayfinder`) are hidden from the model's skill inventory and are only invoked via slash command (`/plan-phases-create`, etc.).
 
-Total: **116 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **120 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
-## 🗺️ Planning & Wayfinding  (13)
+## 🗺️ Planning & Wayfinding  (17)
 
+- **`analyze`** - Non-destructive cross-artifact consistency and quality analysis across a project's spec, plan, and tasks. Read-only report. Adapted from github/spec-kit (standalone, no specify CLI). Use after plan/task generation and before implementation.
 - **`ask-matt`** - Ask which skill or flow fits your situation. A router over the skills in this repo.
+- **`checklist`** - Generate a custom review checklist for a feature, spec, or plan — "unit tests for requirements writing" that validate requirements quality, not implementation. Adapted from github/spec-kit (standalone, no specify CLI).
+- **`constitution`** - Create or update the project constitution: a versioned, semver-tracked set of non-negotiable principles and governance rules, written to .agents/constitution.md. Adapted from github/spec-kit (standalone, no specify CLI).
+- **`converge`** - Assess the current codebase against a feature's spec, plan, and tasks, then append remaining unbuilt work as new tasks. Post-implementation gap analysis. Adapted from github/spec-kit (standalone, no specify CLI).
 - **`create-work-breakdown-structure`** - Create a Work Breakdown Structure (WBS) and WBS Dictionary from project charter deliverables. Covers hierarchical decomposition, WBS coding, effort estimation, dependency identification, and critical path candidates.
 - **`estimate-costs`** - Estimate the monetary cost of a WBS using a rate card. Takes a WBS Dictionary (effort in person-days per work package, with Responsible role) and produces a Cost Breakdown Structure (CBS) with per-package cost, rollups by WBS branch, contingency ranges, and totals. Use after create-work-breakdown-structure, when a project has effort estimates and you need a bottom-up budget, or when pricing out a quote for a client.
 - **`grill-with-docs`** - A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go.
