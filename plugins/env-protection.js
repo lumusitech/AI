@@ -3,7 +3,8 @@
  *
  * Blocks OpenCode from reading or exposing sensitive `.env` files through the
  * read/write tools, reducing the risk of leaking credentials to the model or
- * committing secrets.
+ * committing secrets. Also blocks `export VAR=...` assignments in bash (but
+ * allows commands that merely reference the word "export", e.g. grep/search).
  */
 export const EnvProtectionPlugin = async () => {
   return {
@@ -16,7 +17,7 @@ export const EnvProtectionPlugin = async () => {
       }
       if (input.tool === "bash") {
         const command = output.args?.command ?? "";
-        if (typeof command === "string" && /\bexport\b/.test(command)) {
+        if (typeof command === "string" && /\bexport\s+[A-Za-z_][A-Za-z0-9_]*\s*=/.test(command)) {
           throw new Error("The export command is blocked by the env-protection plugin.")
         }
       }

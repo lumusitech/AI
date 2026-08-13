@@ -3,7 +3,8 @@
 #
 # Blocks file tools (view_file, edit_file, write_file, create_file) from
 # touching any path that contains a `.env` segment, blocks shell commands
-# that reference `.env` secrets, and blocks the `export` shell command,
+# that reference `.env` secrets, and blocks `export VAR=...` assignments
+# (but allows commands that merely reference the word "export", e.g. grep),
 # mirroring the behaviour of the OpenCode `env-protection` plugin.
 #
 # Contract: reads a JSON payload from stdin (protojson/camelCase) and writes a
@@ -68,7 +69,7 @@ if name == "run_command":
             "reason": "Shell command referencing .env is blocked by the env-protection hook.",
         }))
         sys.exit(0)
-    if re.search(r"\bexport\b", lowered):
+    if re.search(r"\bexport\s+[A-Za-z_][A-Za-z0-9_]*\s*=", lowered):
         print(json.dumps({
             "decision": "deny",
             "reason": "The export command is blocked by the env-protection hook.",

@@ -88,7 +88,7 @@ Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode
 
 | Plugin | Hook | Purpose |
 |---|---|---|
-| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files and the `export` shell command to prevent secret leaks |
+| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files and `export VAR=...` shell assignments to prevent secret leaks |
 | `notifications.js` | `event` | Native desktop notification when a session goes idle |
 | `inject-env.js` | `shell.env` | Loads `~/.agent/.env` into every agent shell |
 | `context-compaction.js` | `experimental.session.compacting` | Preserves task state across session compaction |
@@ -112,7 +112,7 @@ Antigravity discovers the shared skills through **two redundant mechanisms** (do
 
 | Hook | Event | Script | Behaviour |
 |---|---|---|---|
-| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths, shell commands referencing `.env`, and the `export` command |
+| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths, shell commands referencing `.env`, and `export VAR=...` shell assignments |
 | notifications | `Stop` | `hooks/notify.sh` | Sends a native desktop notification when the loop stops |
 
 `inject-env` and `context-compaction` remain **OpenCode-only** — they rely on the OpenCode plugin API (`shell.env`, `experimental.session.compacting`) which has no Antigravity equivalent.
