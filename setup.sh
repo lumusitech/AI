@@ -93,6 +93,9 @@ mkdir -p "${OPENCODE_CONFIG_DIR}"
 echo "🔗 Linking opencode.jsonc to OpenCode config (${OPENCODE_CONFIG_DIR}/opencode.jsonc)..."
 ln -sfn "${REPO_DIR}/opencode.jsonc" "${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 
+echo "🔗 Linking dcp.jsonc to OpenCode config (${OPENCODE_CONFIG_DIR}/dcp.jsonc)..."
+ln -sfn "${REPO_DIR}/dcp.jsonc" "${OPENCODE_CONFIG_DIR}/dcp.jsonc"
+
 echo "🔗 Linking AGENTS.md to OpenCode config (${OPENCODE_CONFIG_DIR}/AGENTS.md)..."
 ln -sfn "${REPO_DIR}/AGENTS.md" "${OPENCODE_CONFIG_DIR}/AGENTS.md"
 
@@ -278,6 +281,7 @@ echo "  • Total Curated Skills: ${SKILL_COUNT}"
 echo "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
 echo "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
+echo "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}/dcp.jsonc"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
 echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"

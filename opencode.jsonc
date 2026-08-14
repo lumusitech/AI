@@ -4,9 +4,11 @@
     "~/.agent/AGENTS.md"
   ],
   "lsp": true,
+  "compaction": {
+    "auto": false
+  },
   "plugin": [
-    "@tarquinen/opencode-dcp",
-    "@cortexkit/opencode-magic-context"
+    "@tarquinen/opencode-dcp"
   ],
   "skills": {
     "paths": [
