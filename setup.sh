@@ -109,6 +109,10 @@ done
 echo "🔗 Linking opencode plugins to OpenCode config (${OPENCODE_CONFIG_DIR}/plugins)..."
 ln -sfn "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
 
+# 3b. Per-user local memory database (never committed to the repo)
+echo "🧠 Setting up per-user local memory database..."
+bash "${REPO_DIR}/scripts/memory-setup.sh"
+
 # 4. Clean up legacy skill & temporary directories to prevent duplicate loading & save space
 echo "🧹 Cleaning legacy paths (~/.agents, ~/.claude, ~/temp/antigravity-awesome-skills)..."
 rm -rf "${HOME}/.agents"
@@ -282,6 +286,7 @@ echo "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
 echo "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}/dcp.jsonc"
+echo "  • Memoria Local:        ${MEMORY_FILE_PATH:-~/.local/share/opencode/memory/<user>.jsonl}"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
 echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"

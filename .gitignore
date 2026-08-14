@@ -11,6 +11,12 @@ keystore.properties
 local.properties
 
 # ==========================================
+# Memoria local por-usuario (nunca se commitea)
+# ==========================================
+memory.jsonl
+.local/
+
+# ==========================================
 # Logs y temporales de IAs
 # ==========================================
 *.log

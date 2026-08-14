@@ -42,6 +42,9 @@
 
 ### 4. `memory` (Long-Term Memory Persistence)
 - **Directive:** Store and recall project insights, user preferences, and architectural decision records (ADRs) using `memory` MCP across chat sessions.
+- **Local per-user database:** The memory graph lives in a local per-user file (`$MEMORY_FILE_PATH`, default `~/.local/share/opencode/memory/<github-user>.jsonl`), created by `setup.sh` / `scripts/memory-setup.sh`. It is **never committed, pushed, or PR'd** to this or any other repo. Do not attempt to sync it via git.
+- **Cross-machine transfer:** To move the graph to another machine, offer `/memory-export` (produces a Markdown document with an embedded JSONL block) and import it there with `/memory-import` (replaces, does not merge).
+- **Session-close offer:** At the end of a session, if the memory graph changed and the user is finishing work, offer to run `/memory-export` so the graph can be carried to another machine. **Only act when the user asks** — never export, import, or transfer memory automatically.
 
 ### 5. `playwright` (E2E & UI Browser Verification)
 - **Directive:** Use `playwright` MCP to execute end-to-end browser tests, capture UI states, inspect rendered DOM elements, and verify frontend integration in dynamic applications.
