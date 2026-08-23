@@ -12,6 +12,24 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "🚀 Initializing AI Workspace Setup from: ${REPO_DIR}"
 
+# Idempotent link helper: skips when the link already resolves to the target,
+# and replaces real (non-link) files/dirs so the repo stays the source of truth.
+# Comparison uses `readlink` without -f for macOS portability: setup always
+# creates links with absolute targets.
+link_with_skip() {
+  local src="$1" dst="$2"
+  if [ -e "${dst}" ] && [ ! -L "${dst}" ]; then
+    echo "🧹 Replacing existing '${dst}' with repo link (repo is source of truth)."
+    rm -rf "${dst}"
+  fi
+  if [ -L "${dst}" ] && [ "$(readlink "${dst}")" = "${src}" ]; then
+    echo "✅ Already linked: ${dst}"
+    return 0
+  fi
+  ln -sfn "${src}" "${dst}"
+  echo "🔗 Linked: ${dst}"
+}
+
 # 1. Environment & Credentials Setup
 if [ ! -f "${REPO_DIR}/.env" ]; then
     echo "⚠️  .env file missing. Creating from .env.template..."
@@ -34,19 +52,19 @@ GEMINI_CONFIG_DIR="${HOME}/.gemini/config"
 mkdir -p "${GEMINI_CONFIG_DIR}"
 
 echo "🔗 Linking skills to Antigravity global config (${GEMINI_CONFIG_DIR}/skills)..."
-ln -sfn "${REPO_DIR}/skills" "${GEMINI_CONFIG_DIR}/skills"
+link_with_skip "${REPO_DIR}/skills" "${GEMINI_CONFIG_DIR}/skills"
 
 echo "🔗 Linking skills.json to Antigravity global config (${GEMINI_CONFIG_DIR}/skills.json)..."
-ln -sfn "${REPO_DIR}/skills.json" "${GEMINI_CONFIG_DIR}/skills.json"
+link_with_skip "${REPO_DIR}/skills.json" "${GEMINI_CONFIG_DIR}/skills.json"
 
 echo "🔗 Linking hooks.json to Antigravity global config (${GEMINI_CONFIG_DIR}/hooks.json)..."
-ln -sfn "${REPO_DIR}/hooks.json" "${GEMINI_CONFIG_DIR}/hooks.json"
+link_with_skip "${REPO_DIR}/hooks.json" "${GEMINI_CONFIG_DIR}/hooks.json"
 
 echo "🔗 Linking mcp.json to Antigravity global config (${GEMINI_CONFIG_DIR}/mcp.json)..."
-ln -sfn "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp.json"
+link_with_skip "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp.json"
 
 echo "🔗 Linking GEMINI.md to Antigravity global config (${GEMINI_CONFIG_DIR}/GEMINI.md)..."
-ln -sfn "${REPO_DIR}/GEMINI.md" "${GEMINI_CONFIG_DIR}/GEMINI.md"
+link_with_skip "${REPO_DIR}/GEMINI.md" "${GEMINI_CONFIG_DIR}/GEMINI.md"
 
 # Remove legacy hardcoded backup tokens if existing
 if [ -f "${GEMINI_CONFIG_DIR}/mcp_config.json.backup" ]; then
@@ -83,7 +101,7 @@ fi
 # Link Antigravity/Gemini extension (best-effort; Antigravity bundles its own CLI)
 GEMINI_EXT_DIR="${HOME}/.gemini/extensions"
 mkdir -p "${GEMINI_EXT_DIR}"
-ln -sfn "${REPO_DIR}/extensions/lumusitech" "${GEMINI_EXT_DIR}/lumusitech"
+link_with_skip "${REPO_DIR}/extensions/lumusitech" "${GEMINI_EXT_DIR}/lumusitech"
 echo "🔗 Linked Antigravity/Gemini extension (${GEMINI_EXT_DIR}/lumusitech)"
 
 # 3. OpenCode Configuration Links (~/.config/opencode)
@@ -91,23 +109,32 @@ OPENCODE_CONFIG_DIR="${HOME}/.config/opencode"
 mkdir -p "${OPENCODE_CONFIG_DIR}"
 
 echo "🔗 Linking opencode.jsonc to OpenCode config (${OPENCODE_CONFIG_DIR}/opencode.jsonc)..."
-ln -sfn "${REPO_DIR}/opencode.jsonc" "${OPENCODE_CONFIG_DIR}/opencode.jsonc"
+link_with_skip "${REPO_DIR}/opencode.jsonc" "${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 
 echo "🔗 Linking dcp.jsonc to OpenCode config (${OPENCODE_CONFIG_DIR}/dcp.jsonc)..."
-ln -sfn "${REPO_DIR}/dcp.jsonc" "${OPENCODE_CONFIG_DIR}/dcp.jsonc"
+link_with_skip "${REPO_DIR}/dcp.jsonc" "${OPENCODE_CONFIG_DIR}/dcp.jsonc"
 
 echo "🔗 Linking AGENTS.md to OpenCode config (${OPENCODE_CONFIG_DIR}/AGENTS.md)..."
-ln -sfn "${REPO_DIR}/AGENTS.md" "${OPENCODE_CONFIG_DIR}/AGENTS.md"
+link_with_skip "${REPO_DIR}/AGENTS.md" "${OPENCODE_CONFIG_DIR}/AGENTS.md"
 
 echo "🔗 Linking opencode agents to OpenCode config (${OPENCODE_CONFIG_DIR}/agents)..."
 mkdir -p "${OPENCODE_CONFIG_DIR}/agents"
 for agent in "${REPO_DIR}"/agents/*.md; do
   [ -f "${agent}" ] || continue
-  ln -sfn "${agent}" "${OPENCODE_CONFIG_DIR}/agents/$(basename "${agent}")"
+  link_with_skip "${agent}" "${OPENCODE_CONFIG_DIR}/agents/$(basename "${agent}")"
+done
+
+# Remove orphan agent links pointing at agents no longer in the repo
+for agent_link in "${OPENCODE_CONFIG_DIR}"/agents/*; do
+  [ -L "${agent_link}" ] || continue
+  if [ ! -e "${agent_link}" ]; then
+    echo "🧹 Removing orphan agent link: $(basename "${agent_link}")"
+    rm -f "${agent_link}"
+  fi
 done
 
 echo "🔗 Linking opencode plugins to OpenCode config (${OPENCODE_CONFIG_DIR}/plugins)..."
-ln -sfn "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
+link_with_skip "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
 
 # 3b. Per-user local memory database (never committed to the repo)
 echo "🧠 Setting up per-user local memory database..."

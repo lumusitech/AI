@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, and WSL2.
+> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -83,7 +83,9 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ├── mcp.json                # Antigravity shared MCP declarations
 ├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
 ├── .env                    # Local credentials file (ignored by Git)
-├── setup.sh                # Portable setup script for any machine
+├── setup.sh                # Portable setup script for Unix (macOS, Linux, WSL2)
+├── setup.ps1               # Windows setup script (PowerShell 7)
+├── setup.cmd               # Windows launcher (ExecutionPolicy bypass + pwsh check)
 └── README.md               # You are here
 ```
 
@@ -163,6 +165,8 @@ Files in `~/.agent/agents/` are symlinked into `~/.config/opencode/agents/`. Eac
 
 ## 🚀 Machine Setup Guide
 
+### Unix (macOS / Linux / WSL2)
+
 To sync this workspace to a new machine:
 
 1. **Clone the repository:**
@@ -184,11 +188,74 @@ To sync this workspace to a new machine:
 
 This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
 
-It also verifies the **13 planning skills** are present (8 vendored + 5 custom) and can re-fetch the vendored ones from upstream:
+### Windows (PowerShell 7)
+
+> ⚠️ **PowerShell 7 (`pwsh`) is required** — the setup script does NOT run on Windows PowerShell 5.1. Install it from https://aka.ms/powershell or `winget install --id Microsoft.PowerShell --exact`.
+
+Prerequisites: PowerShell 7, Git for Windows, Node.js 18+ (npm), Bun, GitHub CLI (`gh`). Missing pieces can be installed automatically by the setup with `-InstallPrerequisites`.
+
+1. **Clone the repository:**
+   ```powershell
+   git clone git@github.com:lumusitech/AI.join "$HOME\.agent"
+   cd "$HOME\.agent"
+   ```
+
+2. **Configure environment variables:**
+   ```powershell
+   Copy-Item .env.template .env
+   # Edit .env and set your GITHUB_TOKEN and tokens
+   ```
+
+3. **Run the setup script:**
+   ```cmd
+   setup.cmd
+   ```
+   (or directly: `pwsh -NoProfile -ExecutionPolicy Bypass -File setup.ps1`)
+
+   Optional flags:
+   - `setup.cmd -InstallPrerequisites` — installs missing Git/gh/Node/Bun via winget (idempotent: skips anything already installed).
+   - `setup.cmd -ConfigureWindowsTerminal` — adds an "AI Workspace (pwsh 7)" profile to Windows Terminal and sets it as default (backs up `settings.json` first).
+   - `setup.cmd --refresh-vendored-skills` — re-fetches vendored planning skills from upstream.
+
+The script configures the same links as on Unix (`~/.config/opencode`, `~/.gemini/config`, `~/.gemini/extensions`) and generates `~/.gemini/config/hooks.json` pointing at the PowerShell 7 hooks (`.ps1`) with absolute paths.
+
+**Links on Windows:** creating symbolic links requires Developer Mode (Settings → For developers) or an admin shell. `setup.ps1` detects the capability at startup: with symlink permission everything is linked live (a `git pull` propagates instantly); without it, directories use **junctions** (no admin needed) and files are **copied** — in that case re-run `setup.cmd` after every `git pull` to propagate updates.
+
+**PowerShell profile:** the script adds a block to your pwsh profile (`$PROFILE`) that loads `~/.agent/.env` into every new terminal session, so OpenCode MCP servers see `GITHUB_TOKEN` and `MEMORY_FILE_PATH`:
+
+```powershell
+# >>> lumusitech agent env >>>
+# Load ~/.agent/.env credentials (GITHUB_TOKEN, MEMORY_FILE_PATH, ...) for opencode MCP servers
+if (Test-Path "$HOME\.agent\.env") {
+    Get-Content "$HOME\.agent\.env" | ForEach-Object {
+        if ($_ -match '^\s*([^#=]+)=(.*)$') {
+            [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim().Trim('"'), 'Process')
+        }
+    }
+}
+# <<< lumusitech agent env <<<
+```
+
+**Verify:** open a new terminal and run:
+
+```powershell
+if ($env:GITHUB_TOKEN) { "GITHUB_TOKEN: set (len=$($env:GITHUB_TOKEN.Length))" } else { "GITHUB_TOKEN: not set" }
+```
+
+**Antigravity notifications on Windows** (hooks + OpenCode plugin) use the [BurntToast](https://github.com/Windos/BurntToast) PowerShell module when available: `Install-Module BurntToast -Scope CurrentUser`. Without it, notifications are silently skipped.
+
+### Verify vendored skills (both platforms)
+
+The setup also verifies the **13 planning skills** are present (8 vendored + 5 custom) and can re-fetch the vendored ones from upstream:
 
 ```bash
 ./setup.sh                          # verify + configure
 ./setup.sh --refresh-vendored-skills # re-clone mattpocock/skills + agent-almanac and copy updates
+```
+
+```powershell
+setup.cmd                          # verify + configure
+setup.cmd --refresh-vendored-skills # re-clone mattpocock/skills + agent-almanac and copy updates
 ```
 
 Planning skills come from two upstream sources (MIT) plus custom skills committed to this repo:
@@ -260,12 +327,34 @@ fi
 
 Add the block above to `~/.bashrc`.
 
+**PowerShell 7** (Windows):
+
+```powershell
+# >>> lumusitech agent env >>>
+# Load ~/.agent/.env credentials (GITHUB_TOKEN, MEMORY_FILE_PATH, ...) for opencode MCP servers
+if (Test-Path "$HOME\.agent\.env") {
+    Get-Content "$HOME\.agent\.env" | ForEach-Object {
+        if ($_ -match '^\s*([^#=]+)=(.*)$') {
+            [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim().Trim('"'), 'Process')
+        }
+    }
+}
+# <<< lumusitech agent env <<<
+```
+
+Add the block above to your PowerShell profile (run `notepad $PROFILE` in pwsh). `setup.ps1` does this automatically.
+
 ### Verify
 
 After adding the block, open a **new terminal** and run:
 
 ```bash
 echo "GITHUB_TOKEN: ${GITHUB_TOKEN:+set (len=${#GITHUB_TOKEN})}${GITHUB_TOKEN:-not set}"
+```
+
+```powershell
+# PowerShell 7
+if ($env:GITHUB_TOKEN) { "GITHUB_TOKEN: set (len=$($env:GITHUB_TOKEN.Length))" } else { "GITHUB_TOKEN: not set" }
 ```
 
 If it prints `set`, your MCP servers will have access. **Important:** OpenCode must be restarted from a terminal where the variable is loaded for the MCP servers to use it.
@@ -287,7 +376,7 @@ git config --global credential.https://gist.github.com.helper \
   '!env -u GITHUB_TOKEN -u GH_TOKEN gh auth git-credential'
 ```
 
-> **Automatic:** `setup.sh` applies this fix for you on every machine (it resolves the real `gh` binary path and configures both `github.com` and `gist.github.com`). You only need the manual commands above if you're not running the setup script.
+> **Automatic:** `setup.sh` applies this fix for you on every machine (it resolves the real `gh` binary path and configures both `github.com` and `gist.github.com`). On Windows, `setup.ps1` applies the equivalent fix (an `unset`-based sh helper, since Git for Windows ships no `env`). You only need the manual commands above if you're not running the setup script.
 
 After applying, verify in a shell that loads `.env`:
 

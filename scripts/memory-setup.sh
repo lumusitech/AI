@@ -125,13 +125,24 @@ detect_shell_rc() {
 }
 
 RC_FILE="$(detect_shell_rc)"
+MARKER="# >>> lumusitech agent env >>>"
 if [ -n "${RC_FILE}" ]; then
-  if [ -f "${RC_FILE}" ] && grep -qF 'source "$HOME/.agent/.env"' "${RC_FILE}" 2>/dev/null; then
+  mkdir -p "$(dirname "${RC_FILE}")"
+  if [ -f "${RC_FILE}" ]; then
+    # Remove legacy unmarked loader blocks (pre-marker versions) so a single
+    # marked copy remains — the repo is the source of truth.
+    sed -i -E '/^# Load ~\/\.agent\/\.env credentials \(GITHUB_TOKEN, etc\.\)/,/^fi[[:space:]]*$/d' "${RC_FILE}"
+  fi
+  if [ -f "${RC_FILE}" ] && grep -qF "${MARKER}" "${RC_FILE}" 2>/dev/null; then
     echo "✅ ${RC_FILE} ya carga ~/.agent/.env"
   else
-    mkdir -p "$(dirname "${RC_FILE}")"
+    if [ -f "${RC_FILE}" ]; then
+      # Any other unmarked loader variant: remove it before appending ours.
+      sed -i -E '/^# Load ~\/\.agent\/\.env credentials/,/^fi[[:space:]]*$/d' "${RC_FILE}"
+    fi
     cat >> "${RC_FILE}" <<'BLOCK'
 
+# >>> lumusitech agent env >>>
 # Load ~/.agent/.env credentials (GITHUB_TOKEN, MEMORY_FILE_PATH, etc.) for opencode MCP servers
 if [ -f "$HOME/.agent/.env" ]; then
     set -a
@@ -139,6 +150,7 @@ if [ -f "$HOME/.agent/.env" ]; then
     source "$HOME/.agent/.env"
     set +a
 fi
+# <<< lumusitech agent env <<<
 BLOCK
     echo "✅ Bloque de carga añadido a ${RC_FILE} (recarga tu shell para aplicarlo)"
   fi
