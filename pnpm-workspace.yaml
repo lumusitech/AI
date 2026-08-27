@@ -1,2 +1,3 @@
 allowBuilds:
   '@astudioplus/codegraph-mcp': true
+  'codebase-memory-mcp': true
