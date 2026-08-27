@@ -199,6 +199,7 @@ Link-Dir -Path (Join-Path $GEMINI_CONFIG_DIR 'skills')     -Target (Join-Path $R
 Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'skills.json') -Source (Join-Path $REPO_DIR 'skills.json')
 Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'GEMINI.md')   -Source (Join-Path $REPO_DIR 'GEMINI.md')
 Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp.json')    -Source (Join-Path $REPO_DIR 'mcp.json')
+Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json') -Source (Join-Path $REPO_DIR 'mcp.json')
 
 # hooks.json: generated with absolute Windows paths (Antigravity runs hook
 # commands through a shell that cannot expand `~`). Written only when content
@@ -225,12 +226,6 @@ if (Test-Path -LiteralPath $HOOKS_TEMPLATE) {
 
 # Remove legacy hardcoded backup tokens if existing
 Remove-Item -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json.backup') -Force -ErrorAction SilentlyContinue
-
-# Remove legacy hardcoded secrets from Antigravity config
-if (Test-Path -LiteralPath (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json')) {
-    Write-Host "🧹 Removing legacy $GEMINI_CONFIG_DIR\mcp_config.json (hardcoded secrets)..."
-    Remove-Item -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json') -Force
-}
 
 $SETTINGS_PATH = Join-Path $HOME '.gemini\settings.json'
 if (Test-Path -LiteralPath $SETTINGS_PATH) {
@@ -558,6 +553,7 @@ if ($FOUND_SECRET) {
 # ==============================================================================
 Write-Host "🔎 Verifying MCP binaries on PATH..."
 $MCP_BINS_VERIFY = @(
+    'codebase-memory-mcp',
     'codegraph-mcp',
     'context7-mcp',
     'mcp-server-github',

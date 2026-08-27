@@ -1,19 +1,23 @@
 {
-  "PreToolUse": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "~/.agent/hooks/env-protection.sh"
-        }
-      ]
-    }
-  ],
-  "Stop": [
-    {
-      "type": "command",
-      "command": "~/.agent/hooks/notify.sh"
-    }
-  ]
+  "env-protection": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.agent/hooks/env-protection.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "notifications": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "~/.agent/hooks/notify.sh"
+      }
+    ]
+  }
 }

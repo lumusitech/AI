@@ -60,8 +60,9 @@ link_with_skip "${REPO_DIR}/skills.json" "${GEMINI_CONFIG_DIR}/skills.json"
 echo "🔗 Linking hooks.json to Antigravity global config (${GEMINI_CONFIG_DIR}/hooks.json)..."
 link_with_skip "${REPO_DIR}/hooks.json" "${GEMINI_CONFIG_DIR}/hooks.json"
 
-echo "🔗 Linking mcp.json to Antigravity global config (${GEMINI_CONFIG_DIR}/mcp.json)..."
+echo "🔗 Linking mcp.json to Antigravity global config (${GEMINI_CONFIG_DIR}/mcp.json and mcp_config.json)..."
 link_with_skip "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp.json"
+link_with_skip "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp_config.json"
 
 echo "🔗 Linking GEMINI.md to Antigravity global config (${GEMINI_CONFIG_DIR}/GEMINI.md)..."
 link_with_skip "${REPO_DIR}/GEMINI.md" "${GEMINI_CONFIG_DIR}/GEMINI.md"
@@ -69,12 +70,6 @@ link_with_skip "${REPO_DIR}/GEMINI.md" "${GEMINI_CONFIG_DIR}/GEMINI.md"
 # Remove legacy hardcoded backup tokens if existing
 if [ -f "${GEMINI_CONFIG_DIR}/mcp_config.json.backup" ]; then
     rm -f "${GEMINI_CONFIG_DIR}/mcp_config.json.backup"
-fi
-
-# Remove legacy hardcoded secrets from Antigravity config
-if [ -f "${GEMINI_CONFIG_DIR}/mcp_config.json" ]; then
-    echo "🧹 Removing legacy ${GEMINI_CONFIG_DIR}/mcp_config.json (hardcoded secrets)..."
-    rm -f "${GEMINI_CONFIG_DIR}/mcp_config.json"
 fi
 if [ -f "${HOME}/.gemini/settings.json" ]; then
     echo "🧹 Cleaning hardcoded secrets from ${HOME}/.gemini/settings.json..."
@@ -362,6 +357,7 @@ fi
 # 6. MCP binary availability check (installed locally, exposed on PATH)
 echo "🔎 Verifying MCP binaries on PATH..."
 MCP_BINS_VERIFY=(
+  "codebase-memory-mcp"
   "codegraph-mcp"
   "context7-mcp"
   "mcp-server-github"

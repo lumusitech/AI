@@ -1,19 +1,23 @@
 {
-  "PreToolUse": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "pwsh -NoProfile -File \"__REPO_DIR__\\hooks\\env-protection.ps1\""
-        }
-      ]
-    }
-  ],
-  "Stop": [
-    {
-      "type": "command",
-      "command": "pwsh -NoProfile -File \"__REPO_DIR__\\hooks\\notify.ps1\""
-    }
-  ]
+  "env-protection": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"__REPO_DIR__\\hooks\\env-protection.ps1\""
+          }
+        ]
+      }
+    ]
+  },
+  "notifications": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File \"__REPO_DIR__\\hooks\\notify.ps1\""
+      }
+    ]
+  }
 }

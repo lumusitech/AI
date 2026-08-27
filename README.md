@@ -153,7 +153,7 @@ Third-party npm plugins are declared in `opencode.jsonc` under `"plugin"`:
 
 ### Antigravity / Gemini CLI extension
 
-`extensions/lumusitech/gemini-extension.json` exposes the 5 shared MCP servers to Gemini CLI / Antigravity and points `contextFileName` at `GEMINI.md`. It is linked via `~/.gemini/extensions/lumusitech`. The MCP servers are also declared in `mcp.json` (linked to `~/.gemini/config/mcp.json`) for broad compatibility.
+`extensions/lumusitech/gemini-extension.json` exposes the 6 shared MCP servers to Gemini CLI / Antigravity and points `contextFileName` at `GEMINI.md`. It is linked via `~/.gemini/extensions/lumusitech`. The MCP servers are also declared in `mcp.json` (linked to `~/.gemini/config/mcp.json` and `~/.gemini/config/mcp_config.json`) for broad compatibility.
 
 Antigravity discovers the shared skills through **two redundant mechanisms** (double safety net):
 

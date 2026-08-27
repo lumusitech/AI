@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "codebase-memory": {
+      "command": "codebase-memory-mcp",
+      "args": []
+    },
     "codegraph": {
       "command": "codegraph-mcp",
       "args": []
