@@ -136,9 +136,82 @@ done
 echo "🔗 Linking opencode plugins to OpenCode config (${OPENCODE_CONFIG_DIR}/plugins)..."
 link_with_skip "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
 
+echo "🔗 Linking tui.json to OpenCode config (${OPENCODE_CONFIG_DIR}/tui.json)..."
+link_with_skip "${REPO_DIR}/tui.json" "${OPENCODE_CONFIG_DIR}/tui.json"
+
 # 3b. Per-user local memory database (never committed to the repo)
 echo "🧠 Setting up per-user local memory database..."
 bash "${REPO_DIR}/scripts/memory-setup.sh"
+
+# 3c. Install MCP servers locally and expose their binaries on PATH.
+# This removes `npx -y <pkg>` from opencode.jsonc/mcp.json, so opencode and
+# Antigravity no longer resolve/download packages from the registry at startup.
+echo "📦 Installing local MCP servers (package.json)..."
+LOCAL_BIN_DIR="${HOME}/.local/bin"
+mkdir -p "${LOCAL_BIN_DIR}"
+
+if command -v pnpm >/dev/null 2>&1; then
+    PM="pnpm"
+elif command -v corepack >/dev/null 2>&1; then
+    corepack enable pnpm >/dev/null 2>&1 || true
+    if command -v pnpm >/dev/null 2>&1; then
+        PM="pnpm"
+    else
+        PM="npm"
+    fi
+else
+    PM="npm"
+fi
+echo "  • Package manager: ${PM}"
+( cd "${REPO_DIR}" && "${PM}" install --loglevel=error )
+
+# codegraph-mcp fetches its native engine in postinstall; pnpm 10+ blocks build
+# scripts by default, so run it explicitly (idempotent: skips when engine present).
+CODEGRAPH_POSTINSTALL="${REPO_DIR}/node_modules/@astudioplus/codegraph-mcp/bin/postinstall.js"
+if [ -f "${CODEGRAPH_POSTINSTALL}" ]; then
+    echo "  • Ensuring codegraph-mcp native engine..."
+    node "${CODEGRAPH_POSTINSTALL}" || echo "  ⚠️ codegraph-mcp engine fetch failed (network required on first install)"
+fi
+
+MCP_BINS=(
+    "codegraph-mcp"
+    "context7-mcp"
+    "mcp-server-github"
+    "mcp-server-memory"
+    "playwright-mcp"
+)
+for bin in "${MCP_BINS[@]}"; do
+    src="${REPO_DIR}/node_modules/.bin/${bin}"
+    if [ -e "${src}" ]; then
+        ln -sfn "${src}" "${LOCAL_BIN_DIR}/${bin}"
+        echo "  ✅ MCP bin on PATH: ${bin}"
+    else
+        echo "  ❌ MCP bin missing after install: ${bin}"
+    fi
+done
+
+# Detect Chrome for playwright; fall back to chromium when absent.
+# PLAYWRIGHT_BROWSER is consumed by opencode/antigravity via env (see
+# opencode.jsonc / mcp.json), so it must be loaded from .env on every shell.
+echo "🌐 Detecting browser for playwright MCP..."
+PLAYWRIGHT_BROWSER="chromium"
+if [ -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+    PLAYWRIGHT_BROWSER="chrome"
+elif command -v google-chrome >/dev/null 2>&1 \
+    || command -v google-chrome-stable >/dev/null 2>&1 \
+    || command -v google-chrome-beta >/dev/null 2>&1; then
+    PLAYWRIGHT_BROWSER="chrome"
+fi
+echo "  • PLAYWRIGHT_BROWSER=${PLAYWRIGHT_BROWSER}"
+
+if [ -f "${REPO_DIR}/.env" ]; then
+    if grep -qE '^PLAYWRIGHT_BROWSER=' "${REPO_DIR}/.env"; then
+        sed -i.bak "s/^PLAYWRIGHT_BROWSER=.*/PLAYWRIGHT_BROWSER=${PLAYWRIGHT_BROWSER}/" "${REPO_DIR}/.env"
+        rm -f "${REPO_DIR}/.env.bak"
+    else
+        printf '\n# Resolved by setup.sh (chrome if installed, else chromium). Do not edit manually.\nPLAYWRIGHT_BROWSER=%s\n' "${PLAYWRIGHT_BROWSER}" >> "${REPO_DIR}/.env"
+    fi
+fi
 
 # 4. Clean up legacy skill & temporary directories to prevent duplicate loading & save space
 echo "🧹 Cleaning legacy paths (~/.agents, ~/.claude, ~/temp/antigravity-awesome-skills)..."
@@ -277,28 +350,28 @@ else
   echo "⚠️  Review and remove hardcoded secrets before committing."
 fi
 
-# 6. MCP package availability check
-echo "🔎 Verifying MCP npm packages..."
-MCP_PACKAGES=(
-  "@astudioplus/codegraph-mcp"
-  "@upstash/context7-mcp"
-  "@modelcontextprotocol/server-github"
-  "@modelcontextprotocol/server-memory"
-  "@playwright/mcp"
+# 6. MCP binary availability check (installed locally, exposed on PATH)
+echo "🔎 Verifying MCP binaries on PATH..."
+MCP_BINS_VERIFY=(
+  "codegraph-mcp"
+  "context7-mcp"
+  "mcp-server-github"
+  "mcp-server-memory"
+  "playwright-mcp"
 )
 MCP_OK=0
 MCP_FAIL=0
-for pkg in "${MCP_PACKAGES[@]}"; do
-  if npm view "${pkg}" version >/dev/null 2>&1; then
-    echo "  ✅ OK    ${pkg}"
+for bin in "${MCP_BINS_VERIFY[@]}"; do
+  if [ -e "${HOME}/.local/bin/${bin}" ]; then
+    echo "  ✅ OK    ${bin}"
     MCP_OK=$((MCP_OK + 1))
   else
-    echo "  ❌ FAIL  ${pkg} (not found in npm registry)"
+    echo "  ❌ FAIL  ${bin} (not installed; re-run setup.sh)"
     MCP_FAIL=$((MCP_FAIL + 1))
   fi
 done
 if [ "${MCP_FAIL}" -gt 0 ]; then
-  echo "⚠️  ${MCP_FAIL} MCP package(s) missing. Check your npm registry access."
+  echo "⚠️  ${MCP_FAIL} MCP binary(ies) missing. Re-run setup.sh to install."
 fi
 
 # 7. Summary & Verification
@@ -310,15 +383,17 @@ echo "🎉 Setup Complete!"
 echo "----------------------------------------------------------------------"
 echo "  • Total Curated Skills: ${SKILL_COUNT}"
 echo "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
-echo "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
+echo "  • MCP Bins OK/FAIL:     ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}/dcp.jsonc"
+echo "  • OpenCode TUI:         ${OPENCODE_CONFIG_DIR}/tui.json"
+echo "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 echo "  • Memoria Local:        ${MEMORY_FILE_PATH:-~/.local/share/opencode/memory/<user>.jsonl}"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
 echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"
 echo "  • Antigravity Hooks:    ${GEMINI_CONFIG_DIR}/hooks.json"
-echo "  • MCPs Configured:      context7, codegraph, github, memory, playwright"
+echo "  • MCPs Configured:      context7, codegraph, codebase-memory, github, memory, playwright"
 echo "----------------------------------------------------------------------"
 echo "  💡 Planning pipeline: wayfinder → setup-matt-pocock-skills → to-spec →"
 echo "     create-work-breakdown-structure → estimate-costs → to-tickets"

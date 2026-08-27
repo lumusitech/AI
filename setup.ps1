@@ -272,6 +272,7 @@ $OPENCODE_CONFIG_DIR = Join-Path $HOME '.config\opencode'
 
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'opencode.jsonc') -Source (Join-Path $REPO_DIR 'opencode.jsonc')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'dcp.jsonc')      -Source (Join-Path $REPO_DIR 'dcp.jsonc')
+Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'tui.json')      -Source (Join-Path $REPO_DIR 'tui.json')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'AGENTS.md')      -Source (Join-Path $REPO_DIR 'AGENTS.md')
 Link-Dir  -Path (Join-Path $OPENCODE_CONFIG_DIR 'plugins')        -Target (Join-Path $REPO_DIR 'plugins')
 
@@ -298,6 +299,96 @@ if (Test-Path -LiteralPath $AGENTS_SRC_DIR) {
 # 3b. Per-user local memory database (never committed to the repo)
 Write-Host "🧠 Setting up per-user local memory database..."
 & (Join-Path $REPO_DIR 'scripts\memory-setup.ps1')
+
+# 3c. Install MCP servers locally and expose their binaries on PATH.
+# Removes `npx -y <pkg>` from opencode.jsonc/mcp.json so opencode and Antigravity
+# no longer resolve/download packages from the registry at startup.
+Write-Host "📦 Installing local MCP servers (package.json)..."
+$LOCAL_BIN_DIR = Join-Path $HOME '.local\bin'
+New-Item -ItemType Directory -Path $LOCAL_BIN_DIR -Force | Out-Null
+
+if (Get-Command pnpm -ErrorAction SilentlyContinue) {
+    $PM = 'pnpm'
+} elseif (Get-Command corepack -ErrorAction SilentlyContinue) {
+    & corepack enable pnpm *> $null
+    if (Get-Command pnpm -ErrorAction SilentlyContinue) { $PM = 'pnpm' } else { $PM = 'npm' }
+} else {
+    $PM = 'npm'
+}
+Write-Host "  • Package manager: ${PM}"
+Push-Location $REPO_DIR
+& $PM install --loglevel=error
+Pop-Location
+
+# codegraph-mcp fetches its native engine in postinstall; pnpm 10+ blocks build
+# scripts by default, so run it explicitly (idempotent: skips when engine present).
+$codegraphPostinstall = Join-Path $REPO_DIR 'node_modules\@astudioplus\codegraph-mcp\bin\postinstall.js'
+if (Test-Path -LiteralPath $codegraphPostinstall) {
+    Write-Host "  • Ensuring codegraph-mcp native engine..."
+    & node $codegraphPostinstall *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  ⚠️ codegraph-mcp engine fetch failed (network required on first install)"
+    }
+}
+
+# Windows: npm/pnpm produce `.cmd` shims whose internals are relative to their
+# own directory, so we generate forwarding wrappers (stable absolute path)
+# rather than copying/symlinking the shims directly.
+$MCP_BINS = @(
+    'codegraph-mcp',
+    'context7-mcp',
+    'mcp-server-github',
+    'mcp-server-memory',
+    'playwright-mcp'
+)
+foreach ($bin in $MCP_BINS) {
+    $realShim = Join-Path $REPO_DIR "node_modules\.bin\${bin}.cmd"
+    $wrapper   = Join-Path $LOCAL_BIN_DIR "${bin}.cmd"
+    if (Test-Path -LiteralPath $realShim) {
+        $content = "@echo off`r`ncall `"$realShim`" %*`r`n"
+        $existing = if (Test-Path -LiteralPath $wrapper) { [System.IO.File]::ReadAllText($wrapper) } else { '' }
+        if ($content -ne $existing) {
+            [System.IO.File]::WriteAllText($wrapper, $content, (New-Object System.Text.UTF8Encoding($false)))
+        }
+        Write-Host "  ✅ MCP bin on PATH: ${bin}"
+    } else {
+        Write-Host "  ❌ MCP bin missing after install: ${bin}"
+    }
+}
+
+# Ensure the local bin dir is on the user PATH (idempotent).
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if ($userPath -notlike "*${LOCAL_BIN_DIR}*") {
+    [Environment]::SetEnvironmentVariable('Path', "${LOCAL_BIN_DIR};${userPath}", 'User')
+    Write-Host "  • Added ${LOCAL_BIN_DIR} to user PATH (restart terminal to apply)."
+}
+
+# Detect Chrome for playwright; fall back to chromium when absent.
+Write-Host "🌐 Detecting browser for playwright MCP..."
+$PLAYWRIGHT_BROWSER = 'chromium'
+$chromeCandidates = @(
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+)
+foreach ($c in $chromeCandidates) {
+    if ($c -and (Test-Path -LiteralPath $c)) { $PLAYWRIGHT_BROWSER = 'chrome'; break }
+}
+Write-Host "  • PLAYWRIGHT_BROWSER=${PLAYWRIGHT_BROWSER}"
+
+$envFile = Join-Path $REPO_DIR '.env'
+if (Test-Path -LiteralPath $envFile) {
+    $lines = [System.IO.File]::ReadAllLines($envFile)
+    $newLine = "PLAYWRIGHT_BROWSER=${PLAYWRIGHT_BROWSER}"
+    $found = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^PLAYWRIGHT_BROWSER=') { $lines[$i] = $newLine; $found = $true; break }
+    }
+    if (-not $found) {
+        $lines = $lines + @('', '# Resolved by setup.ps1 (chrome if installed, else chromium). Do not edit manually.', $newLine)
+    }
+    [System.IO.File]::WriteAllLines($envFile, $lines, (New-Object System.Text.UTF8Encoding($false)))
+}
 
 # ==============================================================================
 # 4. Clean up legacy skill & temporary directories to prevent duplicate loading
@@ -451,30 +542,29 @@ if ($FOUND_SECRET) {
 }
 
 # ==============================================================================
-# 6. MCP package availability check
+# 6. MCP binary availability check (installed locally, exposed on PATH)
 # ==============================================================================
-Write-Host "🔎 Verifying MCP npm packages..."
-$MCP_PACKAGES = @(
-    '@astudioplus/codegraph-mcp',
-    '@upstash/context7-mcp',
-    '@modelcontextprotocol/server-github',
-    '@modelcontextprotocol/server-memory',
-    '@playwright/mcp'
+Write-Host "🔎 Verifying MCP binaries on PATH..."
+$MCP_BINS_VERIFY = @(
+    'codegraph-mcp',
+    'context7-mcp',
+    'mcp-server-github',
+    'mcp-server-memory',
+    'playwright-mcp'
 )
 $MCP_OK = 0
 $MCP_FAIL = 0
-foreach ($pkg in $MCP_PACKAGES) {
-    & npm view $pkg version *> $null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "  ✅ OK    ${pkg}"
+foreach ($bin in $MCP_BINS_VERIFY) {
+    if (Test-Path -LiteralPath (Join-Path $HOME ".local\bin\${bin}.cmd")) {
+        Write-Host "  ✅ OK    ${bin}"
         $MCP_OK++
     } else {
-        Write-Host "  ❌ FAIL  ${pkg} (not found in npm registry)"
+        Write-Host "  ❌ FAIL  ${bin} (not installed; re-run setup.ps1)"
         $MCP_FAIL++
     }
 }
 if ($MCP_FAIL -gt 0) {
-    Write-Host "⚠️  ${MCP_FAIL} MCP package(s) missing. Check your npm registry access."
+    Write-Host "⚠️  ${MCP_FAIL} MCP binary(ies) missing. Re-run setup.ps1 to install."
 }
 
 # ==============================================================================
@@ -559,14 +649,16 @@ Write-Host "🎉 Setup Complete!"
 Write-Host "----------------------------------------------------------------------"
 Write-Host "  • Total Curated Skills: ${SKILL_COUNT}"
 Write-Host "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
-Write-Host "  • MCP Packages OK/FAIL: ${MCP_OK}/${MCP_FAIL}"
+Write-Host "  • MCP Bins OK/FAIL:     ${MCP_OK}/${MCP_FAIL}"
 Write-Host "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}\opencode.jsonc"
 Write-Host "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}\dcp.jsonc"
+Write-Host "  • OpenCode TUI:         ${OPENCODE_CONFIG_DIR}\tui.json"
+Write-Host "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 Write-Host "  • Memoria Local:        $env:MEMORY_FILE_PATH (o ~\.local\share\opencode\memory\<user>.jsonl)"
 Write-Host "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}\AGENTS.md"
 Write-Host "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}\skills"
 Write-Host "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}\mcp.json"
-Write-Host "  • MCPs Configured:      context7, codegraph, github, memory, playwright"
+Write-Host "  • MCPs Configured:      context7, codegraph, codebase-memory, github, memory, playwright"
 Write-Host "----------------------------------------------------------------------"
 Write-Host "  💡 Planning pipeline: wayfinder → setup-matt-pocock-skills → to-spec →"
 Write-Host "     create-work-breakdown-structure → estimate-costs → to-tickets"

@@ -8,7 +8,7 @@
     "auto": false
   },
   "plugin": [
-    "@tarquinen/opencode-dcp"
+    "@tarquinen/opencode-dcp@3.1.15"
   ],
   "skills": {
     "paths": [
@@ -16,28 +16,28 @@
     ]
   },
   "mcp": {
+    "codebase-memory-mcp": {
+      "type": "local",
+      "command": [
+        "codebase-memory-mcp"
+      ]
+    },
     "codegraph": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@astudioplus/codegraph-mcp"
+        "codegraph-mcp"
       ]
     },
     "context7": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp"
+        "context7-mcp"
       ]
     },
     "github": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-github"
+        "mcp-server-github"
       ],
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
@@ -46,9 +46,7 @@
     "memory": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
+        "mcp-server-memory"
       ],
       "environment": {
         "MEMORY_FILE_PATH": "{env:MEMORY_FILE_PATH}"
@@ -57,12 +55,11 @@
     "playwright": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@playwright/mcp",
-        "--browser",
-        "chromium"
-      ]
+        "playwright-mcp"
+      ],
+      "environment": {
+        "PLAYWRIGHT_MCP_BROWSER": "{env:PLAYWRIGHT_BROWSER}"
+      }
     }
   }
 }

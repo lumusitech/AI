@@ -1,8 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  "enabled": true,
+  "autoUpdate": false,
+  "pruneNotification": "detailed",
+  "pruneNotificationType": "chat",
   "compress": {
+    "mode": "range",
+    "permission": "ask",
+    "showCompression": true,
+    "summaryBuffer": true,
     "maxContextLimit": "40%",
     "minContextLimit": "35%",
+    "nudgeFrequency": 5,
+    "iterationNudgeThreshold": 15,
     "nudgeForce": "soft"
   }
 }
