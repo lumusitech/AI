@@ -331,10 +331,22 @@ if (Test-Path -LiteralPath $codegraphPostinstall) {
     }
 }
 
+# codebase-memory-mcp fetches its native runtime in postinstall (node install.js);
+# pnpm 10+ blocks build scripts by default, so run it explicitly (idempotent).
+$codebaseMemoryPostinstall = Join-Path $REPO_DIR 'node_modules\codebase-memory-mcp\install.js'
+if (Test-Path -LiteralPath $codebaseMemoryPostinstall) {
+    Write-Host "  • Ensuring codebase-memory-mcp native runtime..."
+    & node $codebaseMemoryPostinstall *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  ⚠️ codebase-memory-mcp runtime fetch failed (network required on first install)"
+    }
+}
+
 # Windows: npm/pnpm produce `.cmd` shims whose internals are relative to their
 # own directory, so we generate forwarding wrappers (stable absolute path)
 # rather than copying/symlinking the shims directly.
 $MCP_BINS = @(
+    'codebase-memory-mcp',
     'codegraph-mcp',
     'context7-mcp',
     'mcp-server-github',

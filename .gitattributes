@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# Line-ending & encoding hardening
+# ---------------------------------------------------------------------------
+# Everything is stored as LF and checked out as LF, so a Windows checkout
+# (which defaults to core.autocrlf=true) never rewrites config files to CRLF.
+# This prevents "invalid JSON" style errors caused by cross-platform drift.
+
+* text=auto
+
+# Config, scripts and docs: always LF, always text.
+*.json       text eol=lf
+*.jsonc      text eol=lf
+*.md         text eol=lf
+*.sh         text eol=lf
+*.ps1        text eol=lf
+*.psm1       text eol=lf
+*.js         text eol=lf
+*.mjs        text eol=lf
+*.cjs        text eol=lf
+*.ts         text eol=lf
+*.yaml       text eol=lf
+*.yml        text eol=lf
+*.toml       text eol=lf
+*.txt        text eol=lf
+.env.template text eol=lf
+LICENSE      text eol=lf
+
+# Windows batch files REQUIRE CRLF to work reliably.
+*.cmd        text eol=crlf
+*.bat        text eol=crlf

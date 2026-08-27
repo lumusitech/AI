@@ -173,7 +173,16 @@ if [ -f "${CODEGRAPH_POSTINSTALL}" ]; then
     node "${CODEGRAPH_POSTINSTALL}" || echo "  ⚠️ codegraph-mcp engine fetch failed (network required on first install)"
 fi
 
+# codebase-memory-mcp fetches its native runtime in postinstall (node install.js);
+# pnpm 10+ blocks build scripts by default, so run it explicitly (idempotent).
+CODEBASE_MEMORY_POSTINSTALL="${REPO_DIR}/node_modules/codebase-memory-mcp/install.js"
+if [ -f "${CODEBASE_MEMORY_POSTINSTALL}" ]; then
+    echo "  • Ensuring codebase-memory-mcp native runtime..."
+    node "${CODEBASE_MEMORY_POSTINSTALL}" || echo "  ⚠️ codebase-memory-mcp runtime fetch failed (network required on first install)"
+fi
+
 MCP_BINS=(
+    "codebase-memory-mcp"
     "codegraph-mcp"
     "context7-mcp"
     "mcp-server-github"

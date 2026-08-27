@@ -93,6 +93,12 @@ if (-not $MEM_FILE) {
     if ($MEM_FILE -like '~*') { $MEM_FILE = $HOME + $MEM_FILE.Substring(1) }
 }
 
+# opencode substitutes {env:MEMORY_FILE_PATH} verbatim (no JSON escaping), so a
+# Windows path with backslashes would produce invalid JSON escape sequences and
+# fail with "opencode.jsonc is not valid JSON(C)". Forward slashes are valid on
+# Windows (PowerShell, .NET and Node all accept them), so we normalize here.
+$MEM_FILE = $MEM_FILE.Replace('\', '/')
+
 $MEM_DIR = Split-Path -Parent $MEM_FILE
 try {
     New-Item -ItemType Directory -Path $MEM_DIR -Force -ErrorAction Stop | Out-Null

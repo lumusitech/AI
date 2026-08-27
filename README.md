@@ -37,11 +37,11 @@ The workspace configures 6 MCP servers for OpenCode and Antigravity. They are **
 | `github` | `mcp-server-github` | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` from `~/.agent/.env` |
 | `memory` | `mcp-server-memory` | `@modelcontextprotocol/server-memory` | — |
 | `playwright` | `playwright-mcp` | `@playwright/mcp` | Chrome (installed) **or** Chromium (auto-downloaded) |
-| `codebase-memory` | `codebase-memory-mcp` | native binary (manual install) | — (optional) |
+| `codebase-memory` | `codebase-memory-mcp` | `codebase-memory-mcp` | — |
 
 - **`context7`**: Official documentation lookup for libraries, frameworks, and SDKs.
 - **`codegraph`**: Graph-based repository symbol search and dependency tracking.
-- **`codebase-memory`**: Optional native binary (`~/.local/bin/codebase-memory-mcp`); skipped automatically if not present on the machine.
+- **`codebase-memory`**: Graph-based code intelligence for AI agents. Its native runtime is fetched by the package's own postinstall (same pattern as `codegraph`).
 - **`github`**: PR, issue, and workflow management authenticated via `{env:GITHUB_TOKEN}`.
 - **`memory`**: Long-term persistent memory across chat sessions.
 - **`playwright`**: End-to-end browser testing and UI visual inspection. Uses the **installed Chrome** when available, falling back to a downloaded **Chromium** otherwise (see below).
@@ -103,7 +103,10 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 ├── agents/                 # OpenCode custom agents (arquitecto.md, ...)
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
 ├── extensions/lumusitech/  # Antigravity / Gemini CLI extension (gemini-extension.json)
-├── memory.jsonl            # MCP memory knowledge graph (shared across machines via git)
+├── scripts/                # memory-setup.{sh,ps1}: per-user memory path written to .env
+├── .gitattributes          # LF line endings + binary markers (cross-platform hardening)
+├── .editorconfig           # UTF-8 / LF / trailing-newline for editors
+├── .github/workflows/      # CI: validates JSON/JSONC + rejects BOM/CRLF on PRs
 ├── AGENTS.md               # Global directives for OpenCode agents
 ├── GEMINI.md               # Global directives for Gemini CLI / Antigravity
 ├── opencode.jsonc          # OpenCode config: MCPs (local bins) + DCP plugin + skills paths
@@ -118,6 +121,14 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 ├── setup.cmd               # Windows launcher (ExecutionPolicy bypass + pwsh check)
 └── README.md               # You are here
 ```
+
+### Cross-platform hardening
+
+Config files move between macOS, Linux, WSL2 and Windows through git. Three safeguards keep them valid everywhere:
+
+- **`.gitattributes`** forces LF line endings on checkout (a Windows default of `core.autocrlf=true` would otherwise rewrite them to CRLF) and keeps `.cmd`/`.bat` on CRLF.
+- **`.editorconfig`** pins `UTF-8` + `LF` + trailing newline in editors, avoiding BOM/encoding drift.
+- **`.github/workflows/validate-config.yml`** validates every `.json`/`.jsonc` and rejects UTF-8 BOM and CRLF in config/scripts/docs on every PR, so invalid JSON never merges.
 
 ---
 
@@ -173,21 +184,18 @@ Antigravity discovers the shared skills through **two redundant mechanisms** (do
 | Plugins | JS plugins (`plugins/`) + npm plugins | Not supported — use `hooks.json` |
 | Lifecycle hooks | `tool.execute.*`, `event`, `shell.env`, ... | `hooks.json` (`PreToolUse`, `Stop`, ...) |
 
-### MCP Memory sync across machines
+### MCP Memory (per-user, local)
 
-`memory.jsonl` stores the MCP memory server's knowledge graph (entities, relations, observations). Both OpenCode and Antigravity are configured to use `~/.agent/memory.jsonl` via the `MEMORY_FILE_PATH` environment variable.
+The MCP memory server stores its knowledge graph (entities, relations, observations) in a **per-user local file** that is **never committed to the repo**. The location is injected via the `MEMORY_FILE_PATH` environment variable (see `opencode.jsonc` / `mcp.json`):
 
-Since the file lives inside the repo, it is version-controlled and shared across machines via git:
+- Unix: `~/.local/share/opencode/memory/<user>.jsonl`
+- Windows: `C:/Users/<user>/.local/share/opencode/memory/<user>.jsonl`
 
-```bash
-# After a work session, commit memory changes
-cd ~/.agent && git add memory.jsonl && git commit -m "chore: sync memory" && git push
+`scripts/memory-setup.{sh,ps1}` detects your identity, writes `MEMORY_FILE_PATH` into `~/.agent/.env`, and ensures your shell/PowerShell profile loads it.
 
-# On the other machine, pull before starting work
-cd ~/.agent && git pull
-```
+> **Why forward slashes on Windows?** opencode substitutes `{env:MEMORY_FILE_PATH}` in `opencode.jsonc` **verbatim** (without JSON-escaping the value). A Windows path with backslashes (`C:\Users\...`) would inject invalid JSON escape sequences and make opencode fail with `opencode.jsonc is not valid JSON(C)`. `memory-setup.ps1` therefore normalizes the path to forward slashes (`/`), which Windows, PowerShell and Node all accept.
 
-> **Note:** Only one machine should be active at a time to avoid merge conflicts. The JSONL format makes conflicts hard to resolve automatically.
+To move the graph to another machine, use the `/memory-export` and `/memory-import` skills (a Markdown document with an embedded JSONL block) — the file itself is never synced via git.
 
 ### OpenCode custom agents
 

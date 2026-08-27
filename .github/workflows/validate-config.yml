@@ -1,0 +1,58 @@
+name: Validate config
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate JSON files
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in $(git ls-files '*.json'); do
+            if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$f"; then
+              echo "::error file=$f::invalid JSON"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Validate JSONC files
+        # The .jsonc files in this repo are intentionally strict-JSON-compatible
+        # (no comments, no trailing commas), so strict JSON.parse is the check.
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in $(git ls-files '*.jsonc'); do
+            if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$f"; then
+              echo "::error file=$f::invalid JSONC"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Reject UTF-8 BOM and CRLF in config/scripts/docs
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in $(git ls-files '*.json' '*.jsonc' '*.sh' '*.ps1' '*.js' '*.md' '*.yaml' '*.yml' '.env.template'); do
+            if head -c3 "$f" | od -An -tx1 | tr -d ' \n' | grep -q 'efbbbf'; then
+              echo "::error file=$f::starts with UTF-8 BOM"
+              fail=1
+            fi
+            if grep -q $'\r' "$f"; then
+              echo "::error file=$f::contains CRLF line endings"
+              fail=1
+            fi
+          done
+          exit $fail
