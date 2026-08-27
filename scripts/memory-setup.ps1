@@ -71,7 +71,7 @@ if ([string]::IsNullOrWhiteSpace($USER_SLUG)) {
 Write-Host "👤 Usuario detectado: ${USER_SLUG}"
 
 # --- 2. Pick memory location -------------------------------------------------
-$DEFAULT_MEM_FILE = Join-Path $HOME ".local\share\opencode\memory\${USER_SLUG}.jsonl"
+$DEFAULT_MEM_FILE = (Join-Path $HOME ".local\share\opencode\memory\${USER_SLUG}.jsonl").Replace('\', '/')
 
 $MEM_FILE = $null
 if (-not [string]::IsNullOrWhiteSpace($env:MEMORY_FILE_PATH)) {
@@ -137,6 +137,9 @@ function Set-EnvValue {
 }
 
 Set-EnvValue -File $ENV_FILE -Key 'MEMORY_FILE_PATH' -Value $MEM_FILE
+# Keep the current session consistent: if the profile loaded a stale backslash
+# path, opencode launched from this same session would read that obsolete value.
+$env:MEMORY_FILE_PATH = $MEM_FILE
 Write-Host "✅ MEMORY_FILE_PATH=${MEM_FILE} escrito en ${ENV_FILE}"
 
 # --- 4. Ensure the PowerShell profile loads ~/.agent/.env --------------------
