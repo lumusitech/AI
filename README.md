@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 5 core MCP integrations (`context7`, `codegraph`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -28,30 +28,57 @@ All AI agents in this workspace operate under strict directives defined in [`AGE
 
 ## 🛠️ MCP (Model Context Protocol) Integrations
 
-The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each runs via `npx -y <package>` (auto-downloads and always uses the latest version):
+The workspace configures 6 MCP servers for OpenCode and Antigravity. They are **installed locally by `setup.sh` / `setup.ps1`** (from `package.json`, with `pnpm` → `corepack pnpm` → `npm` fallback) and exposed on `PATH` via `~/.local/bin`, so neither OpenCode nor Antigravity resolves or downloads packages from the registry at startup (no `npx -y`):
 
-| Server | npm package | Requires |
-|---|---|---|
-| `codegraph` | `@astudioplus/codegraph-mcp` | — (native binary per platform) |
-| `context7` | `@upstash/context7-mcp` | — |
-| `github` | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` loaded from `~/.agent/.env` |
-| `memory` | `@modelcontextprotocol/server-memory` | — |
-| `playwright` | `@playwright/mcp` | Chromium browser (auto-downloaded on first use) |
+| Server | Binary | Package | Requires |
+|---|---|---|---|
+| `codegraph` | `codegraph-mcp` | `@astudioplus/codegraph-mcp` | — (native binary per platform) |
+| `context7` | `context7-mcp` | `@upstash/context7-mcp` | — |
+| `github` | `mcp-server-github` | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` from `~/.agent/.env` |
+| `memory` | `mcp-server-memory` | `@modelcontextprotocol/server-memory` | — |
+| `playwright` | `playwright-mcp` | `@playwright/mcp` | Chrome (installed) **or** Chromium (auto-downloaded) |
+| `codebase-memory` | `codebase-memory-mcp` | native binary (manual install) | — (optional) |
 
 - **`context7`**: Official documentation lookup for libraries, frameworks, and SDKs.
 - **`codegraph`**: Graph-based repository symbol search and dependency tracking.
+- **`codebase-memory`**: Optional native binary (`~/.local/bin/codebase-memory-mcp`); skipped automatically if not present on the machine.
 - **`github`**: PR, issue, and workflow management authenticated via `{env:GITHUB_TOKEN}`.
 - **`memory`**: Long-term persistent memory across chat sessions.
-- **`playwright`**: End-to-end browser testing and UI visual inspection.
+- **`playwright`**: End-to-end browser testing and UI visual inspection. Uses the **installed Chrome** when available, falling back to a downloaded **Chromium** otherwise (see below).
+
+### Playwright browser (Chrome → Chromium fallback)
+
+`setup.sh` / `setup.ps1` detect whether Google Chrome is installed and resolve the browser **automatically**, writing `PLAYWRIGHT_BROWSER` to `~/.agent/.env` (idempotent, re-resolved on every run):
+
+- **macOS**: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+- **Linux**: `google-chrome`, `google-chrome-stable`, or `google-chrome-beta` on `PATH`
+- **Windows**: `%ProgramFiles%\Google\Chrome\Application\chrome.exe`, the `(x86)` variant, or `%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe`
+
+If Chrome is present the value is `chrome` (uses the system browser, no download); otherwise `chromium` (Playwright downloads Chromium to `~/.cache/ms-playwright/` on first use). The variable is consumed via `PLAYWRIGHT_MCP_BROWSER` (env var) in `opencode.jsonc` and `mcp.json`.
 
 ### Prerequisites per machine
 
-- **Node.js 18+ and npm** — required by `npx`. Install via `nvm`, your distro package manager, or https://nodejs.org.
-- **Bun** — used by OpenCode to install npm plugins declared in `opencode.jsonc` (`"plugin": [...]`). Install via `curl -fsSL https://bun.sh/install | bash` or your package manager.
-- **Playwright Chromium** — the `@playwright/mcp` server downloads Chromium to `~/.cache/ms-playwright/` automatically on first use. If it ever needs reinstalling: `npx playwright install chromium`.
+- **Node.js 18+ and npm** — required to install the local MCP packages. Install via `nvm`, your distro package manager, or https://nodejs.org.
+- **pnpm** (recommended) — used by `setup.sh` to install the local MCP packages. If absent, the setup falls back to `corepack enable pnpm`, then to `npm`.
+- **Bun** — used by OpenCode to install the DCP plugin declared in `opencode.jsonc` (`"plugin": [...]`). Install via `curl -fsSL https://bun.sh/install | bash` or your package manager.
 - **GitHub token** — `github` MCP requires `GITHUB_TOKEN`; see [Loading Credentials](#-loading-credentials-for-mcp-servers) below.
 
-`setup.sh` verifies all 5 npm packages exist on the machine after setup and reports any that are missing.
+`setup.sh` installs the MCP packages and verifies their binaries are on `PATH` after setup, reporting any that are missing.
+
+---
+
+## 🧠 Gestión de contexto
+
+Los modelos empiezan a degradarse a partir de ~40-44% de su ventana de contexto (en un modelo de 1M, ~400k tokens). Por debajo de ese punto comprimir es innecesario y degrada el contexto útil; por encima se trabaja en la zona de degradación.
+
+Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con la auto-compactación nativa desactivada (`compaction.auto: false`):
+
+- **~40% del contexto** (`maxContextLimit: "40%"` en `dcp.jsonc`): DCP empieza a *empujar suavemente* al modelo a comprimir (`nudgeForce: "soft"`).
+- **Pregunta al usuario:** la herramienta `compress` usa `permission: "ask"`, así que antes de comprimir **se pide permiso al usuario**, quien decide comprimir o continuar (asumiendo el riesgo de degradación).
+- **Sin compactado automático:** ni OpenCode (`compaction.auto: false`) ni DCP comprimen por su cuenta. La decisión siempre es del usuario.
+- **Notificación:** `pruneNotification: "detailed"` informa en el chat cuando se poda contenido.
+
+> **Por qué no se compacta antes:** `magic-context` tenía un fallback de ~128k que compactaba prematuramente en modelos de 1M. Se eliminó; DCP con el umbral del 40% es la única fuente de verdad para el contexto.
 
 ---
 
@@ -79,7 +106,10 @@ The workspace configures 5 MCP servers for both OpenCode and Antigravity. Each r
 ├── memory.jsonl            # MCP memory knowledge graph (shared across machines via git)
 ├── AGENTS.md               # Global directives for OpenCode agents
 ├── GEMINI.md               # Global directives for Gemini CLI / Antigravity
-├── opencode.jsonc          # OpenCode config: MCPs + npm plugins + skills paths
+├── opencode.jsonc          # OpenCode config: MCPs (local bins) + DCP plugin + skills paths
+├── dcp.jsonc               # DCP plugin config: 40% threshold, permission "ask"
+├── tui.json                # OpenCode TUI config (scroll acceleration)
+├── package.json            # Local MCP packages installed by setup.sh (pnpm/npm)
 ├── mcp.json                # Antigravity shared MCP declarations
 ├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
 ├── .env                    # Local credentials file (ignored by Git)
@@ -105,8 +135,10 @@ Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode
 | `context-compaction.js` | `experimental.session.compacting` | Preserves task state across session compaction |
 
 Third-party npm plugins are declared in `opencode.jsonc` under `"plugin"`:
-- `@tarquinen/opencode-dcp` — prunes obsolete tool outputs from context (saves tokens)
-- `@cortexkit/opencode-magic-context` — cross-session memory and context management
+
+- `@tarquinen/opencode-dcp` (pinned `@3.1.15`) — dynamic context pruning. Its `compress` tool replaces stale, closed conversation spans with technical summaries. Configured (see `dcp.jsonc`) to **nudge softly at ~40% of the model context** and to **ask the user** before compressing (`compress.permission: "ask"`).
+
+> **Removed:** `@cortexkit/opencode-magic-context` was removed. Its hardcoded ~128k fallback triggered premature compaction in 1M-token models and its auto-update-checker failed at startup. Context management is now handled solely by DCP (see [Gestión de contexto](#-gestión-de-contexto)).
 
 ### Antigravity / Gemini CLI extension
 

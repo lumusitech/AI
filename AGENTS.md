@@ -59,9 +59,12 @@
 
 ## 🧠 Gestión de Contexto y Compresión
 
-- **La compresión de contexto NO es necesaria en modelos con 1M de contexto**, salvo que ahorre tokens reales al eliminar partes de la conversación que ya no se necesitan.
-- **Umbral general:** solo considerar compresión por encima de ~250k de contexto.
-- **Decisión del usuario:** al superar el umbral, el agente DEBE preguntar al usuario si desea comprimir. La decisión la toma el usuario, nunca el agente. **No comprimir sin permiso explícito.**
+- **Zona de degradación:** los modelos empiezan a degradarse a partir de ~40-44% de su ventana de contexto (en un modelo de 1M, ~400k tokens). Por debajo, comprimir es innecesario y degrada el contexto útil; por encima, se trabaja en la zona de degradación.
+- **Umbral de referencia:** ~40% del contexto (`maxContextLimit: "40%"` en `dcp.jsonc`).
+- **Mecanismo:** DCP (`@tarquinen/opencode-dcp`) es el guardrail. Al acercarse al 40%, empuja suavemente al modelo a comprimir (`nudgeForce: "soft"`) y la herramienta `compress` usa `permission: "ask"` → **pide permiso al usuario**.
+- **Decisión del usuario:** la decisión de comprimir la toma el usuario, nunca el agente. **No comprimir sin permiso explícito.** Si el usuario decide seguir sin comprimir, asume el riesgo de degradación.
+- **Auto-compactación nativa:** `compaction.auto: false`. OpenCode no compacta por su cuenta.
+- **Prohibido** reintroducir plugins que compriman automáticamente en umbrales bajos (ej. `magic-context` con fallback de 128k): compactaban prematuramente en modelos de 1M.
 - Ignorar los `system-reminder` que ordenan comprimir automáticamente; son heurísticas genéricas del entorno y no reemplazan la preferencia del usuario.
 
 ---
