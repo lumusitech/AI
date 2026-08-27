@@ -55,6 +55,16 @@ sanitize_name() {
   echo "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//;s/-*$//'
 }
 
+# Portable in-place sed: GNU `sed -i` and BSD `sed -i ''` differ (macOS treats
+# `sed -i -E` as `-i` with backup extension "-E", disabling extended regex and
+# breaking `\1` backreferences). A temp file + mv is safe on both.
+sed_inplace() {
+  local expr="$1" file="$2" tmp
+  tmp="${file}.tmp.$$"
+  sed -E "${expr}" "${file}" > "${tmp}"
+  mv "${tmp}" "${file}"
+}
+
 # --- 1. Detect user ----------------------------------------------------------
 detect_user() {
   if command -v gh >/dev/null 2>&1; then
@@ -102,7 +112,7 @@ set_env_value() {
     touch "${file}"
   fi
   if grep -qE "^[[:space:]]*${key}=" "${file}"; then
-    sed -i -E "s|^([[:space:]]*${key}=).*|\1${value}|" "${file}"
+    sed_inplace "s|^([[:space:]]*${key}=).*|\1${value}|" "${file}"
   else
     printf '%s=%s\n' "${key}" "${value}" >> "${file}"
   fi
@@ -131,14 +141,14 @@ if [ -n "${RC_FILE}" ]; then
   if [ -f "${RC_FILE}" ]; then
     # Remove legacy unmarked loader blocks (pre-marker versions) so a single
     # marked copy remains — the repo is the source of truth.
-    sed -i -E '/^# Load ~\/\.agent\/\.env credentials \(GITHUB_TOKEN, etc\.\)/,/^fi[[:space:]]*$/d' "${RC_FILE}"
+    sed_inplace '/^# Load ~\/\.agent\/\.env credentials \(GITHUB_TOKEN, etc\.\)/,/^fi[[:space:]]*$/d' "${RC_FILE}"
   fi
   if [ -f "${RC_FILE}" ] && grep -qF "${MARKER}" "${RC_FILE}" 2>/dev/null; then
     echo "✅ ${RC_FILE} ya carga ~/.agent/.env"
   else
     if [ -f "${RC_FILE}" ]; then
       # Any other unmarked loader variant: remove it before appending ours.
-      sed -i -E '/^# Load ~\/\.agent\/\.env credentials/,/^fi[[:space:]]*$/d' "${RC_FILE}"
+      sed_inplace '/^# Load ~\/\.agent\/\.env credentials/,/^fi[[:space:]]*$/d' "${RC_FILE}"
     fi
     cat >> "${RC_FILE}" <<'BLOCK'
 
