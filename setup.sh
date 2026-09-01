@@ -235,12 +235,16 @@ fi
 # the full OAuth token stored by `gh auth login`. A fine-grained PAT lacks the
 # `Contents: write` permission needed to delete remote branches, breaking
 # `git push --delete`. Force git to use gh's stored OAuth token.
+# --replace-all: removes any previously configured helpers for these hosts so a
+# single source of truth remains. Without it, `git config` fails with
+# "multiple values" when duplicate helpers exist (e.g. after re-logins of gh or
+# a leftover credential.helper), aborting the script under set -euo pipefail.
 if command -v gh >/dev/null 2>&1; then
     GH_BIN="$(command -v gh)"
     echo "🔧 Configuring git to use gh OAuth token (ignoring GITHUB_TOKEN/GH_TOKEN)..."
-    git config --global credential.https://github.com.helper \
+    git config --global --replace-all credential.https://github.com.helper \
       "!env -u GITHUB_TOKEN -u GH_TOKEN ${GH_BIN} auth git-credential"
-    git config --global credential.https://gist.github.com.helper \
+    git config --global --replace-all credential.https://gist.github.com.helper \
       "!env -u GITHUB_TOKEN -u GH_TOKEN ${GH_BIN} auth git-credential"
     echo "  ✅ git credential helper: ${GH_BIN}"
 else
