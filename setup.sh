@@ -134,6 +134,9 @@ link_with_skip "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
 echo "🔗 Linking tui.json to OpenCode config (${OPENCODE_CONFIG_DIR}/tui.json)..."
 link_with_skip "${REPO_DIR}/tui.json" "${OPENCODE_CONFIG_DIR}/tui.json"
 
+echo "🔗 Linking skills to OpenCode config (${OPENCODE_CONFIG_DIR}/skills)..."
+link_with_skip "${REPO_DIR}/skills" "${OPENCODE_CONFIG_DIR}/skills"
+
 # 3b. Per-user local memory database (never committed to the repo)
 echo "🧠 Setting up per-user local memory database..."
 bash "${REPO_DIR}/scripts/memory-setup.sh"
@@ -193,6 +196,13 @@ for bin in "${MCP_BINS[@]}"; do
         echo "  ❌ MCP bin missing after install: ${bin}"
     fi
 done
+
+# Expose archify CLI binary on PATH if installed in skills/archify
+if [ -f "${REPO_DIR}/skills/archify/bin/archify.mjs" ]; then
+    chmod +x "${REPO_DIR}/skills/archify/bin/archify.mjs"
+    ln -sfn "${REPO_DIR}/skills/archify/bin/archify.mjs" "${LOCAL_BIN_DIR}/archify"
+    echo "  ✅ Archify CLI on PATH: archify"
+fi
 
 # Detect Chrome for playwright; fall back to chromium when absent.
 # PLAYWRIGHT_BROWSER is consumed by opencode/antigravity via env (see
@@ -266,6 +276,7 @@ VENDOR_SOURCES=(
   "mattpocock|research|https://github.com/mattpocock/skills|skills/engineering/research"
   "mattpocock|triage|https://github.com/mattpocock/skills|skills/engineering/triage"
   "agent-almanac|create-work-breakdown-structure|https://github.com/pjt222/agent-almanac|skills/create-work-breakdown-structure"
+  "tt-a1i|archify|https://github.com/tt-a1i/archify|archify"
 )
 
 SKILL_SRC_DIR="${HOME}/.cache/agent-vendor-src"
@@ -282,10 +293,8 @@ if [ "${1:-}" = "--refresh-vendored-skills" ]; then
     if [ -f "${TMP_REPO}/${SRC_PATH}/SKILL.md" ]; then
       rm -rf "${REPO_DIR}/skills/${NAME}"
       mkdir -p "${REPO_DIR}/skills/${NAME}"
-      cp "${TMP_REPO}/${SRC_PATH}/SKILL.md" "${REPO_DIR}/skills/${NAME}/SKILL.md"
-      for aux in "${TMP_REPO}/${SRC_PATH}"/*.md; do
-        [ -f "${aux}" ] && [ "$(basename "${aux}")" != "SKILL.md" ] && cp "${aux}" "${REPO_DIR}/skills/${NAME}/"
-      done
+      cp -a "${TMP_REPO}/${SRC_PATH}/." "${REPO_DIR}/skills/${NAME}/"
+      [ -d "${REPO_DIR}/skills/${NAME}/bin" ] && chmod +x "${REPO_DIR}/skills/${NAME}/bin"/*.mjs 2>/dev/null || true
       echo "  ✅ ${NAME} ← ${REPO} (${SRC_PATH})"
     else
       echo "  ❌ ${NAME}: source not found in ${REPO}"
@@ -293,9 +302,21 @@ if [ "${1:-}" = "--refresh-vendored-skills" ]; then
   done
 fi
 
-echo "🔎 Verifying vendored planning skills..."
+echo "🔎 Verifying vendored skills..."
 for entry in "${VENDOR_SOURCES[@]}"; do
   IFS='|' read -r ORIGIN NAME REPO SRC_PATH <<< "${entry}"
+  if [ ! -f "${REPO_DIR}/skills/${NAME}/SKILL.md" ]; then
+    echo "  📥 Installing missing vendored skill ${NAME} from ${REPO}..."
+    mkdir -p "${SKILL_SRC_DIR}"
+    TMP_REPO="${SKILL_SRC_DIR}/$(basename "${REPO}")"
+    git clone --depth 1 --quiet "${REPO}" "${TMP_REPO}" 2>/dev/null || \
+      git -C "${TMP_REPO}" pull --quiet 2>/dev/null || true
+    if [ -f "${TMP_REPO}/${SRC_PATH}/SKILL.md" ]; then
+      mkdir -p "${REPO_DIR}/skills/${NAME}"
+      cp -a "${TMP_REPO}/${SRC_PATH}/." "${REPO_DIR}/skills/${NAME}/"
+      [ -d "${REPO_DIR}/skills/${NAME}/bin" ] && chmod +x "${REPO_DIR}/skills/${NAME}/bin"/*.mjs 2>/dev/null || true
+    fi
+  fi
   if [ -f "${REPO_DIR}/skills/${NAME}/SKILL.md" ]; then
     VENDOR_OK=$((VENDOR_OK + 1))
   else
