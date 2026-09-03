@@ -8,7 +8,7 @@
 - **Antigravity** reads only one level deep (`skills/<name>/SKILL.md`): nested sub-skills (e.g. the 48 `design-it/*` styles) are **not** listed as individual skills there. That is why the layout stays flat and `design-it` acts as a router. Do not reorganize skills into category subfolders.
 - Skills with `disable-model-invocation: true` (currently 10: `ask-matt`, `cyber-audit`, `grill-with-docs`, `plan-phases-create`, `plan-phases-implement`, `setup-matt-pocock-skills`, `to-spec`, `to-tickets`, `triage`, `wayfinder`) are hidden from the model's skill inventory and are only invoked via slash command (`/plan-phases-create`, etc.).
 
-Total: **120 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **121 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (17)
 
@@ -92,8 +92,9 @@ Total: **120 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`mercadopago`** - Integration patterns for MercadoPago LATAM (Checkout Pro, Checkout API, Pix, Subscriptions, Webhook Security, Node/Java SDKs).
 - **`webhooks`** - Webhook design and implementation: request/response contracts, idempotency, retries with exponential backoff, HMAC signature verification, replay protection. Use when building webhook receivers or senders in Spring Boot or any backend.
 
-## 🏛️ Architecture Patterns  (4)
+## 🏛️ Architecture & Diagram Patterns  (5)
 
+- **`archify`** - Create polished, validated architecture, workflow, sequence, data-flow, and lifecycle/state diagrams as explorable standalone HTML with inline SVG, dark/light themes, optional trace motion, and PNG/JPEG/WebP/SVG/WebM export. Accept plain-language requirements or pasted Mermaid flowchart, sequenceDiagram, and stateDiagram input.
 - **`cqrs-implementation`** - Implement Command Query Responsibility Segregation for scalable architectures. Use when separating read and write models, optimizing query performance, or building event-sourced systems.
 - **`ddd-tactical-patterns`** - Apply DDD tactical patterns in code using entities, value objects, aggregates, repositories, and domain events with explicit invariants.
 - **`domain-driven-design`** - Plan and route Domain-Driven Design work from strategic modeling to tactical implementation and evented architecture patterns.

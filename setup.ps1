@@ -270,6 +270,7 @@ Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'dcp.jsonc')      -Source (Join-
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'tui.json')      -Source (Join-Path $REPO_DIR 'tui.json')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'AGENTS.md')      -Source (Join-Path $REPO_DIR 'AGENTS.md')
 Link-Dir  -Path (Join-Path $OPENCODE_CONFIG_DIR 'plugins')        -Target (Join-Path $REPO_DIR 'plugins')
+Link-Dir  -Path (Join-Path $OPENCODE_CONFIG_DIR 'skills')         -Target (Join-Path $REPO_DIR 'skills')
 
 $AGENTS_DIR = Join-Path $OPENCODE_CONFIG_DIR 'agents'
 New-Item -ItemType Directory -Path $AGENTS_DIR -Force | Out-Null
@@ -363,6 +364,18 @@ foreach ($bin in $MCP_BINS) {
     }
 }
 
+# Expose archify CLI on Windows PATH if installed in skills/archify
+$archifyMjs = Join-Path $REPO_DIR 'skills\archify\bin\archify.mjs'
+if (Test-Path -LiteralPath $archifyMjs) {
+    $wrapper = Join-Path $LOCAL_BIN_DIR 'archify.cmd'
+    $content = "@echo off`r`nnode `"$archifyMjs`" %*`r`n"
+    $existing = if (Test-Path -LiteralPath $wrapper) { [System.IO.File]::ReadAllText($wrapper) } else { '' }
+    if ($content -ne $existing) {
+        [System.IO.File]::WriteAllText($wrapper, $content, (New-Object System.Text.UTF8Encoding($false)))
+    }
+    Write-Host "  ✅ Archify CLI on PATH: archify"
+}
+
 # Ensure the local bin dir is on the user PATH (idempotent).
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if ($userPath -notlike "*${LOCAL_BIN_DIR}*") {
@@ -443,7 +456,8 @@ $VENDOR_SOURCES = @(
     'mattpocock|grill-with-docs|https://github.com/mattpocock/skills|skills/engineering/grill-with-docs',
     'mattpocock|research|https://github.com/mattpocock/skills|skills/engineering/research',
     'mattpocock|triage|https://github.com/mattpocock/skills|skills/engineering/triage',
-    'agent-almanac|create-work-breakdown-structure|https://github.com/pjt222/agent-almanac|skills/create-work-breakdown-structure'
+    'agent-almanac|create-work-breakdown-structure|https://github.com/pjt222/agent-almanac|skills/create-work-breakdown-structure',
+    'tt-a1i|archify|https://github.com/tt-a1i/archify|archify'
 )
 
 $SKILL_SRC_DIR = Join-Path $HOME '.cache\agent-vendor-src'
@@ -467,15 +481,13 @@ if ($RefreshVendored) {
             git clone --depth 1 --quiet $repo $tmpRepo *> $null
         }
 
-        $srcSkill = Join-Path $tmpRepo ($srcPath -replace '/', '\') + '\SKILL.md'
+        $srcFolder = Join-Path $tmpRepo ($srcPath -replace '/', '\')
+        $srcSkill = Join-Path $srcFolder 'SKILL.md'
         if (Test-Path -LiteralPath $srcSkill) {
             $destDir = Join-Path $REPO_DIR "skills\$name"
             Remove-Item -Path $destDir -Force -Recurse -ErrorAction SilentlyContinue
             New-Item -ItemType Directory -Path $destDir -Force | Out-Null
-            Copy-Item -Path $srcSkill -Destination (Join-Path $destDir 'SKILL.md') -Force
-            Get-ChildItem -LiteralPath (Split-Path -Path $srcSkill -Parent) -Filter '*.md' -File |
-                Where-Object { $_.Name -ne 'SKILL.md' } |
-                ForEach-Object { Copy-Item -Path $_.FullName -Destination $destDir -Force }
+            Copy-Item -Path (Join-Path $srcFolder '*') -Destination $destDir -Recurse -Force
             Write-Host "  ✅ ${name} ← ${repo} (${srcPath})"
         } else {
             Write-Host "  ❌ ${name}: source not found in ${repo}"
@@ -483,10 +495,32 @@ if ($RefreshVendored) {
     }
 }
 
-Write-Host "🔎 Verifying vendored planning skills..."
+Write-Host "🔎 Verifying vendored skills..."
 foreach ($entry in $VENDOR_SOURCES) {
-    $name = ($entry -split '\|')[1]
-    if (Test-Path -LiteralPath (Join-Path $REPO_DIR "skills\$name\SKILL.md")) {
+    $parts   = $entry -split '\|'
+    $name    = $parts[1]
+    $repo    = $parts[2]
+    $srcPath = $parts[3]
+    $skillFile = Join-Path $REPO_DIR "skills\$name\SKILL.md"
+
+    if (-not (Test-Path -LiteralPath $skillFile)) {
+        Write-Host "  📥 Installing missing vendored skill ${name} from ${repo}..."
+        New-Item -ItemType Directory -Path $SKILL_SRC_DIR -Force | Out-Null
+        $tmpRepo = Join-Path $SKILL_SRC_DIR (Split-Path -Leaf $repo)
+        if (Test-Path -LiteralPath (Join-Path $tmpRepo '.git')) {
+            git -C $tmpRepo pull --quiet *> $null
+        } else {
+            git clone --depth 1 --quiet $repo $tmpRepo *> $null
+        }
+        $srcFolder = Join-Path $tmpRepo ($srcPath -replace '/', '\')
+        if (Test-Path -LiteralPath (Join-Path $srcFolder 'SKILL.md')) {
+            $destDir = Join-Path $REPO_DIR "skills\$name"
+            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+            Copy-Item -Path (Join-Path $srcFolder '*') -Destination $destDir -Recurse -Force
+        }
+    }
+
+    if (Test-Path -LiteralPath $skillFile) {
         $VENDOR_OK++
     } else {
         Write-Host "  ❌ MISSING ${name} (run: setup.ps1 --refresh-vendored-skills)"
