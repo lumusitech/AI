@@ -26,6 +26,12 @@
 - **Clientes Declarativos:** Preferir interfaces `@HttpExchange` sobre RestTemplate/WebClient imperativos.
 - **Idiomas Java Modernos:** Usar Record Patterns, Pattern Matching para switch, Sequenced Collections y Scoped Values.
 
+### 5. Pragmatismo Operativo y Economía de Tokens en Tareas de Sistema
+- **Instalación directa sin sobre-auditoría:** Ante solicitudes de instalación de binarios o paquetes locales (.tar.gz, AppImage, scripts), ejecutar directamente el flujo estándar: extracción al destino, symlink a `~/.local/bin`, lanzador `.desktop` con icono e incorporación a Chezmoi si aplica. No clonar repositorios externos, no ejecutar análisis de dependencias innecesarios ni herramientas lentas (`npx asar`) salvo falla evidente.
+- **Cero ejecución de GUIs en background:** Queda estrictamente prohibido ejecutar binarios que levanten ventanas gráficas, navegadores o servidores de lenguaje para "probar" la instalación. La verificación debe ser puramente estática (`desktop-file-validate`, permisos en `$PATH` y existencia de assets).
+- **Resolución ágil de permisos:** Si la tarea no exige explícitamente root o el entorno carece de `sudo` sin clave, proceder de inmediato en espacio de usuario (`~/.local`) sin detener el flujo con preguntas redundantes.
+- **Conciencia de costo:** Cada comando y tool call tiene un costo real en tokens y tiempo; priorizar siempre el camino más directo, atómico y eficiente.
+
 ---
 
 ## 🛠️ Reglas de Operación de MCP
