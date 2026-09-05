@@ -26,6 +26,12 @@
 - **Declarative Clients:** Prefer `@HttpExchange` interfaces over imperative RestTemplate/WebClient.
 - **Modern Java Idioms:** Use Record Patterns, Pattern Matching for switch, Sequenced Collections, and Scoped Values.
 
+### 5. Operational Pragmatism & Token Economy in System Tasks
+- **Direct Installation without Over-Auditing:** When installing local binaries or archives (.tar.gz, AppImage, scripts), execute standard workflows directly: extract to target, symlink to `~/.local/bin`, create `.desktop` launcher with icon, and track in Chezmoi if requested. Do not clone external repos, run unnecessary dependency checks, or invoke slow extraction tools (`npx asar`) unless a concrete failure occurs.
+- **Zero Background GUI Execution:** Strictly prohibit running binaries that spawn graphical windows, browsers, or language servers just to "test" an installation. Verification must remain purely static (`desktop-file-validate`, `$PATH` presence, executable permissions, and asset existence).
+- **Swift Permission Handling:** If a task does not explicitly mandate root or passwordless sudo is unavailable, default immediately to user space (`~/.local`) without interrupting with redundant prompts.
+- **Cost Awareness:** Every tool call and command carries real latency and token cost; always take the most direct, atomic path.
+
 ---
 
 ## 🛠️ MCP (Model Context Protocol) Operating Rules
