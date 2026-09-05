@@ -32,6 +32,15 @@
 - **Resolución ágil de permisos:** Si la tarea no exige explícitamente root o el entorno carece de `sudo` sin clave, proceder de inmediato en espacio de usuario (`~/.local`) sin detener el flujo con preguntas redundantes.
 - **Conciencia de costo:** Cada comando y tool call tiene un costo real en tokens y tiempo; priorizar siempre el camino más directo, atómico y eficiente.
 
+### 6. Autonomía de Ejecución y Política de Permisos (Zero-Prompting en Lectura)
+- **Cero preguntas para lectura y exploración:** Queda estrictamente PROHIBIDO pedir confirmación, preguntar al usuario o solicitar permisos para comandos de consulta, exploración o inspección del sistema (`ls`, `cat`, `grep`, `find`, `file`, `stat`, `git status`, `git log`, `git diff`, `which`, `ps`, etc.). Toda acción de solo lectura debe ejecutarse de forma 100% autónoma y silenciosa.
+- **Autonomía en archivos y directorios temporales:** Se permite crear, manipular y eliminar archivos en ubicaciones temporales (`/tmp`, directorios scratch) sin consultar al usuario, siempre que se limpien al terminar.
+- **Confirmación exclusiva para mutaciones persistentes:** ÚNICAMENTE se debe solicitar confirmación o preguntar al usuario antes de ejecutar mutaciones permanentes sobre el sistema en cuestión:
+  - Modificaciones al sistema operativo o paquetes globales (`pacman`, configs en `/etc/`).
+  - Instalación, modificación o eliminación persistente de aplicaciones o servicios.
+  - Modificaciones en dotfiles (`chezmoi`, `~/.config/`, etc.) o en repositorios de código.
+- **Formato de confirmación:** Cuando una mutación requiera confirmación, presentar de forma directa y concisa qué se va a modificar y por qué, sin preguntas exploratorias intermedias.
+
 ---
 
 ## 🛠️ Reglas de Operación de MCP
