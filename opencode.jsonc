@@ -4,6 +4,29 @@
     "~/.agent/AGENTS.md"
   ],
   "lsp": true,
+  "permission": {
+    "read": "allow",
+    "bash": {
+      "*": "ask",
+      "ls": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "file *": "allow",
+      "stat *": "allow",
+      "which *": "allow",
+      "pwd": "allow",
+      "echo *": "allow",
+      "ps *": "allow",
+      "git status*": "allow",
+      "git log*": "allow",
+      "git diff*": "allow",
+      "git branch*": "allow",
+      "git show*": "allow",
+      "desktop-file-validate *": "allow"
+    }
+  },
   "compaction": {
     "auto": false
   },

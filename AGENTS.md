@@ -32,6 +32,15 @@
 - **Swift Permission Handling:** If a task does not explicitly mandate root or passwordless sudo is unavailable, default immediately to user space (`~/.local`) without interrupting with redundant prompts.
 - **Cost Awareness:** Every tool call and command carries real latency and token cost; always take the most direct, atomic path.
 
+### 6. Execution Autonomy & Permission Policy (Zero-Prompting on Read)
+- **Zero Prompting for Read & Exploration:** Strictly PROHIBITED from asking confirmation, prompting the user, or seeking permissions for system inspection, queries, or exploration commands (`ls`, `cat`, `grep`, `find`, `file`, `stat`, `git status`, `git log`, `git diff`, `which`, `ps`, etc.). All read-only actions must run 100% autonomously and silently.
+- **Autonomy in Temporary & Scratch Paths:** Creating, editing, or deleting files in temporary locations (`/tmp`, scratch directories) requires no confirmation, provided they are cleaned up upon completion.
+- **Confirmation Reserved Exclusively for Persistent Mutations:** ONLY ask for confirmation before executing persistent, stateful mutations on the target system:
+  - Changes to the operating system or global packages (`pacman`, `/etc/` configs).
+  - Permanent installation, alteration, or deletion of applications or services.
+  - Modifications to dotfiles (`chezmoi`, `~/.config/`, etc.) or project repositories.
+- **Confirmation Format:** When a mutation warrants confirmation, explain concisely what will be changed and why, avoiding intermediate exploratory questions.
+
 ---
 
 ## 🛠️ MCP (Model Context Protocol) Operating Rules
