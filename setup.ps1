@@ -376,6 +376,18 @@ if (Test-Path -LiteralPath $archifyMjs) {
     Write-Host "  ✅ Archify CLI on PATH: archify"
 }
 
+# Expose github-mcp-bridge on Windows PATH (resolves auth from gh keyring)
+$bridgeMjs = Join-Path $REPO_DIR 'scripts\github-mcp-bridge.mjs'
+if (Test-Path -LiteralPath $bridgeMjs) {
+    $wrapper = Join-Path $LOCAL_BIN_DIR 'github-mcp-bridge.cmd'
+    $content = "@echo off`r`nnode `"$bridgeMjs`" %*`r`n"
+    $existing = if (Test-Path -LiteralPath $wrapper) { [System.IO.File]::ReadAllText($wrapper) } else { '' }
+    if ($content -ne $existing) {
+        [System.IO.File]::WriteAllText($wrapper, $content, (New-Object System.Text.UTF8Encoding($false)))
+    }
+    Write-Host "  ✅ GitHub MCP bridge on PATH: github-mcp-bridge"
+}
+
 # Ensure the local bin dir is on the user PATH (idempotent).
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if ($userPath -notlike "*${LOCAL_BIN_DIR}*") {

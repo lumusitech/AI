@@ -204,6 +204,13 @@ if [ -f "${REPO_DIR}/skills/archify/bin/archify.mjs" ]; then
     echo "  ✅ Archify CLI on PATH: archify"
 fi
 
+# Expose github-mcp-bridge binary on PATH (resolves auth from gh keyring)
+if [ -f "${REPO_DIR}/scripts/github-mcp-bridge.mjs" ]; then
+    chmod +x "${REPO_DIR}/scripts/github-mcp-bridge.mjs"
+    ln -sfn "${REPO_DIR}/scripts/github-mcp-bridge.mjs" "${LOCAL_BIN_DIR}/github-mcp-bridge"
+    echo "  ✅ GitHub MCP bridge on PATH: github-mcp-bridge"
+fi
+
 # Detect Chrome for playwright; fall back to chromium when absent.
 # PLAYWRIGHT_BROWSER is consumed by opencode/antigravity via env (see
 # opencode.jsonc / mcp.json), so it must be loaded from .env on every shell.
