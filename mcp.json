@@ -13,11 +13,9 @@
       "args": []
     },
     "github": {
-      "command": "mcp-server-github",
-      "args": [],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "command": "node",
+      "args": ["scripts/github-mcp-bridge.mjs"],
+      "env": {}
     },
     "memory": {
       "command": "mcp-server-memory",
