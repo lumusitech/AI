@@ -7,9 +7,9 @@
  * `$env:VAR=...` assignments in PowerShell, and `setx` commands (but allows
  * commands that merely reference the word "export", e.g. grep/search).
  *
- * V1: exported a named function returning { "tool.execute.before": (input, output) => ... }.
- * V2: default-export { id, setup } and register ctx.tool.hook("execute.before", ...),
- *     reading the tool name from event.tool and args from event.input
+ * V2: exports { id, setup } via module.exports for maximum loader compatibility.
+ *     Registers ctx.tool.hook("execute.before", ...) reading tool name from
+ *     event.tool and args from event.input.
  *     (see https://opencode.ai/v2/docs/build/plugins/migrate-v1/).
  *
  * NOTE: self-contained on purpose. It never shells out to
@@ -17,7 +17,7 @@
  * popups or hit UTF-8 decoding errors in the hook host. It also imports
  * nothing except the loader-provided ctx (offline-safe, no node_modules needed).
  */
-export default {
+module.exports = {
   id: "lumus.env-protection",
   async setup(ctx) {
     await ctx.tool.hook("execute.before", (event) => {

@@ -4,17 +4,16 @@
  * Injects a persistence checklist into the compaction request so that state
  * survives long sessions: current task, files in play, decisions, and blockers.
  *
- * V1: exported a named function returning { "experimental.session.compacting": ... }
- *     with output.context.push().
- * V2: default-export { id, setup } and register ctx.session.hook("compaction", ...),
- *     pushing to event.system (see https://opencode.ai/v2/docs/build/plugins/migrate-v1/).
+ * V2: exports { id, setup } via module.exports for maximum loader compatibility.
+ *     Registers ctx.session.hook("compaction", ...) pushing to event.system.
+ *     (see https://opencode.ai/v2/docs/build/plugins/migrate-v1/).
  *
  * NOTE: intentionally no `import { Plugin } from "@opencode/plugin"`.
  * Plugin.define() is only a type-checking identity helper; the loader decodes
  * the plain { id, setup } object directly, and local plugins have no
  * node_modules to resolve the package from (offline-safe).
  */
-export default {
+module.exports = {
   id: "lumus.context-compaction",
   async setup(ctx) {
     await ctx.session.hook("compaction", (event) => {
