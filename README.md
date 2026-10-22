@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory` / `conventional-commits` / `branch-pr` / `issue-creation`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -342,6 +342,12 @@ Piezas de método (skills portadas de [gentle-ai](https://github.com/Gentleman-P
 - **`/rdd`** — Receipt-Driven Development: **congela el candidato** antes de revisarlo, profundidad por **riesgo** del candidato, y resultado **informacional** (no autoriza commit/push/PR/release).
 - **`/judgment-day`** — review **adversarial doble ciego**: dos jueces read-only en paralelo sobre un objetivo congelado; solo se corrige lo confirmado por **ambos**; terminal `APPROVED | ESCALATED`.
 - **`/skill-creator`** — autorar skills LLM-first.
+
+Git/PR, ancladas a **estándares abiertos y neutrales** (no a la taxonomía de un vendor):
+
+- **`/conventional-commits`** — mensajes de commit según **Conventional Commits v1.0.0** (compatible con commitlint/semantic-release/changelog).
+- **`/branch-pr`** — nombres de rama (**Conventional Branch**) y flujo de PR (**GitHub Flow**, título Conventional Commits, keywords estándar de GitHub `Closes/Fixes/Resolves #N` / `Refs #N`); comentarios de review con **Conventional Comments**.
+- **`/issue-creation`** — issues con **GitHub Issue Forms/templates** como autoridad de formato, vocabulario de **labels por defecto de GitHub**, y triaje con Conventional Comments.
 
 > Review y delivery son decisiones **separadas**: un review/veredicto **nunca** autoriza commit, push, PR o release. Eso sigue la política ordinaria del repo.
 
