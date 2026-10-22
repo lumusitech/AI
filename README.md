@@ -82,6 +82,33 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 
 ---
 
+## 💸 Economía de tokens y caché
+
+El coste de una sesión se divide en **prompt fijo** (system prompt + `AGENTS.md` + ~118 tools MCP + ~124 skills ≈ 22–33k tokens/turno) y **trabajo** (lo que el agente realmente hace). El prompt fijo es grande, pero con **caché de prompt** deja de ser el problema.
+
+### Enrutado a un único provider (stickiness de caché)
+
+`opencode.jsonc` fija `provider.order: ["sail-research"]` con `allow_fallbacks: true`. Motivo: la caché de prompt de OpenRouter **no cruza providers** y su *sticky routing* **se desactiva con un `order` manual**, así que repartir la carga entre varios providers garantiza miss. Se eligió `sail-research` como el provider más barato en **turno caliente** para `deepseek/deepseek-v4.1-flash`: caché a 0.1x (~860 µ$ vs ~3.380 µ$ en frío, para 32k input + 2k output).
+
+### Medición (la única fuente de verdad)
+
+- **Dashboard:** OpenRouter → Activity → Overview (`Cache hit rate`, `Blended $/1M`).
+- **Por generación:** `./scripts/measure-openrouter-cache.sh <generation_id>` — consulta `/api/v1/generation` y muestra `cached_tokens`, `cache_hit_pct`, `cache_discount` y `total_cost`. Requiere `OPENROUTER_API_KEY` en `~/.agent/.env`.
+
+### Hallazgo (2026-10-22): **no podar por coste**
+
+Medido en Activity: **14 peticiones, 1.91M tokens, $0.11, cache hit rate 92.2%**, blended **$0.06/1M**.
+
+La caché **amortiza el prompt fijo** (~90% se lee a 0.1x). Por eso **no se podan los servidores MCP ni las skills por motivo de coste**: ahorraría céntimos y añadiría riesgo. Solo se justificaría podar por **presión de ventana de contexto** o **ruido en la selección de tools** — no por dinero.
+
+El ahorro real está en el **trabajo**, no en el prompt fijo: el **modo ODD** de `AGENTS.md` (inline-first, delegar solo con una razón nombrable, sin artefactos para tareas pequeñas) evita sobre-delegación y documentos innecesarios.
+
+### Skills: ocultar del modelo (si algún día hace falta)
+
+OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravity). Para sacar una skill del inventario que ve el modelo **sin** dejar de poder invocarla por nombre exacto: `metadata: { opencode/autoinvoke: "false" }` en su `SKILL.md`.
+
+---
+
 ## 📂 Repository Structure
 
 ```text
@@ -101,6 +128,7 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
 ├── hooks/                  # Antigravity lifecycle hooks (env-protection, notifications)
 ├── scripts/                # memory-setup.{sh,ps1}: per-user memory path written to .env
+│                           # measure-openrouter-cache.sh: auditoría de caché (cached_tokens, cache_discount)
 ├── .gitattributes          # LF line endings + binary markers (cross-platform hardening)
 ├── .editorconfig           # UTF-8 / LF / trailing-newline for editors
 ├── .github/workflows/      # CI: validates JSON/JSONC + rejects BOM/CRLF on PRs
