@@ -9,7 +9,7 @@
 - **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
 - `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
-Total: **125 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **128 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (17)
 
@@ -153,11 +153,12 @@ Total: **125 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`bash-pro`** - Master of defensive Bash scripting for production automation, CI/CD
 - **`linux-shell-scripting`** - Provide production-ready shell script templates for common Linux system administration tasks including backups, monitoring, user management, log analysis, and automation. These scripts serve as building blocks for security operations and penetration testing environments.
 
-## 🔀 Git & GitHub  (3)
+## 🔀 Git & GitHub  (4)
 
 - **`git-advanced-workflows`** - Master advanced Git techniques to maintain clean history, collaborate effectively, and recover from any situation with confidence.
 - **`git-pr-workflows-git-workflow`** - Orchestrate review, tests, commits, branch pushes, and pull-request creation with parallel agents. Use when completed changes must move through validation into a PR or guarded merge.
 - **`github-automation`** - Operate GitHub issues, pull requests, branches, checks, workflows, and permissions through Rube MCP. Use when GitHub work must be queried or changed programmatically with repository-policy safeguards.
+- **`work-unit-commits`** - Plan commits as reviewable work units, not by file type. Use when splitting a feature into commits, preparing commits before a PR, keeping tests and docs with the code they explain, or turning a large change into chained/stacked PRs. Adapted from gentle-ai's work-unit-commits.
 
 ## 🧪 Testing  (5)
 
@@ -167,9 +168,11 @@ Total: **125 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`junit-5-skill`** - Generates production-grade JUnit 5 unit and integration tests in Java. Covers assertions, parameterized tests, lifecycle hooks, mocking with Mockito, and nested tests. Use when user mentions "JUnit", "JUnit 5", "@Test", "assertEquals", "Assertions", "Java unit test". Triggers on: "@Test", "Mockito", "parameterized tests".
 - **`e2e-testing`** - End-to-end testing workflow with Playwright for browser automation, visual regression, cross-browser testing, and CI/CD integration.
 
-## ⚖️ Code Quality & Engineering  (8)
+## ⚖️ Code Quality & Engineering  (10)
 
 - **`clean-code`** - This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\
+- **`review`** - Run a read-only review of a diff or PR through a selected lens (risk / readability / reliability / resilience). Report findings only; never fix. Use after a change or before merge to get an independent, risk-tiered pass. Adapted from gentle-ai's review lenses.
+- **`skill-creator`** - Create LLM-first skills with valid frontmatter, a concise body, and local references. Use when authoring a new SKILL.md, documenting an AI usage pattern, or when project conventions differ from generic best practices. Adapted from gentle-ai's skill-creator.
 - **`code-review-excellence`** - Improve code-review process and culture: constructive feedback, systematic analysis, and collaborative review practices. Use when establishing review workflows, mentoring reviewers, or planning review strategies.
 - **`code-reviewer`** - Perform rigorous code reviews of diffs and pull requests: correctness, security, performance, and readability. Use when reviewing a PR, a diff, or specific code for issues before merge.
 - **`code-simplification`** - Simplifies code for clarity. Use when refactoring code for clarity without changing behavior. Use when code works but is harder to read, maintain, or extend than it should be. Use when reviewing code that has accumulated unnecessary complexity.
