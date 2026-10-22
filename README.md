@@ -2,7 +2,7 @@
 
 > Centralized AI workspace: Streamlined curated skills (~115), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
-This repository serves as the single source of truth for **OpenCode** and **Antigravity (TUI / IDE)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
+This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
 ### 🌐 Language convention
 
@@ -28,7 +28,7 @@ All AI agents in this workspace operate under strict directives defined in [`AGE
 
 ## 🛠️ MCP (Model Context Protocol) Integrations
 
-The workspace configures 6 MCP servers for OpenCode and Antigravity. They are **installed locally by `setup.sh` / `setup.ps1`** (from `package.json`, with `pnpm` → `corepack pnpm` → `npm` fallback) and exposed on `PATH` via `~/.local/bin`, so neither OpenCode nor Antigravity resolves or downloads packages from the registry at startup (no `npx -y`):
+The workspace configures 6 MCP servers for OpenCode and Antigravity. They are **installed locally by `setup.sh` / `setup.ps1`** (from `package.json`, with `pnpm` → `corepack pnpm` → `npm` fallback) and exposed on `PATH` via `~/.local/bin`, so neither agent resolves or downloads packages from the registry at startup (no `npx -y`):
 
 | Server | Binary | Package | Requires |
 |---|---|---|---|
@@ -74,7 +74,7 @@ Los modelos empiezan a degradarse a partir de ~40-44% de su ventana de contexto 
 Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con la auto-compactación nativa desactivada (`compaction.auto: false`):
 
 - **~40% del contexto** (`maxContextLimit: "40%"` en `dcp.jsonc`): DCP empieza a *empujar suavemente* al modelo a comprimir (`nudgeForce: "soft"`).
-- **Pregunta al usuario:** la herramienta `compress` usa `permission: "ask"`, así que antes de comprimir **se pide permiso al usuario**, quien decide comprimir o continuar (asumiendo el riesgo de degradación).
+- **Pregunta al usuario:** OpenCode V2 no soporta `permission: "ask"` en DCP, así que `compress` usa `permission: "allow"` y la política de **pedir permiso antes de comprimir** se mantiene como regla del agente. El usuario decide comprimir o continuar (asumiendo el riesgo de degradación).
 - **Sin compactado automático:** ni OpenCode (`compaction.auto: false`) ni DCP comprimen por su cuenta. La decisión siempre es del usuario.
 - **Notificación:** `pruneNotification: "detailed"` informa en el chat cuando se poda contenido.
 
@@ -97,23 +97,20 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 │   ├── estimate-costs/     # 📊 CBS bottom-up con rate card (skill custom)
 │   └── ...
 ├── .config/rates/          # Global rate card default para estimate-costs
-├── skills.json             # Antigravity explicit skill discovery entry (~/.agent/skills)
-├── hooks.json              # Antigravity lifecycle hooks (env-protection, notifications)
-├── hooks/                  # Hook scripts (env-protection.sh, notify.sh)
 ├── agents/                 # OpenCode custom agents (arquitecto.md, ...)
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
-├── extensions/lumusitech/  # Antigravity / Gemini CLI extension (gemini-extension.json)
+├── hooks/                  # Antigravity lifecycle hooks (env-protection, notifications)
 ├── scripts/                # memory-setup.{sh,ps1}: per-user memory path written to .env
 ├── .gitattributes          # LF line endings + binary markers (cross-platform hardening)
 ├── .editorconfig           # UTF-8 / LF / trailing-newline for editors
 ├── .github/workflows/      # CI: validates JSON/JSONC + rejects BOM/CRLF on PRs
-├── AGENTS.md               # Global directives for OpenCode agents
-├── GEMINI.md               # Global directives for Gemini CLI / Antigravity
+├── AGENTS.md               # Global directives for OpenCode + Antigravity (single source of truth)
 ├── opencode.jsonc          # OpenCode config: MCPs (local bins) + DCP plugin + skills paths
-├── dcp.jsonc               # DCP plugin config: 40% threshold, permission "ask"
+├── dcp.jsonc               # DCP plugin config: 40% threshold, permission "allow"
+├── mcp.json                # Antigravity MCP servers (standard mcpServers schema)
+├── hooks.json              # Antigravity lifecycle hooks (linked to ~/.gemini/config/hooks.json)
 ├── tui.json                # OpenCode TUI config (scroll acceleration)
 ├── package.json            # Local MCP packages installed by setup.sh (pnpm/npm)
-├── mcp.json                # Antigravity shared MCP declarations
 ├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
 ├── .env                    # Local credentials file (ignored by Git)
 ├── setup.sh                # Portable setup script for Unix (macOS, Linux, WSL2)
@@ -147,46 +144,13 @@ Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode
 
 Third-party npm plugins are declared in `opencode.jsonc` under `"plugin"`:
 
-- `@tarquinen/opencode-dcp` (pinned `@3.1.15`) — dynamic context pruning. Its `compress` tool replaces stale, closed conversation spans with technical summaries. Configured (see `dcp.jsonc`) to **nudge softly at ~40% of the model context** and to **ask the user** before compressing (`compress.permission: "ask"`).
+- `@tarquinen/opencode-dcp` (pinned `@3.2.0`) — dynamic context pruning. Its `compress` tool replaces stale, closed conversation spans with technical summaries. Configured (see `dcp.jsonc`) to **nudge softly at ~40% of the model context** and to **ask the user** before compressing (agent policy; `compress.permission: "allow"` because OpenCode V2 rejects `"ask"`).
 
 > **Removed:** `@cortexkit/opencode-magic-context` was removed. Its hardcoded ~128k fallback triggered premature compaction in 1M-token models and its auto-update-checker failed at startup. Context management is now handled solely by DCP (see [Gestión de contexto](#-gestión-de-contexto)).
 
-### Antigravity / Gemini CLI extension
-
-`extensions/lumusitech/gemini-extension.json` exposes the 6 shared MCP servers to Gemini CLI / Antigravity and points `contextFileName` at `GEMINI.md`. It is linked via `~/.gemini/extensions/lumusitech`. The MCP servers are also declared in `mcp.json` (linked to `~/.gemini/config/mcp.json` and `~/.gemini/config/mcp_config.json`) for broad compatibility.
-
-Antigravity discovers the shared skills through **two redundant mechanisms** (double safety net):
-
-- The `skills` symlink at `~/.gemini/config/skills` → `~/.agent/skills`
-- An explicit `skills.json` at `~/.gemini/config/skills.json` declaring `{ "entries": [{ "path": "~/.agent/skills" }] }`
-
-> **Discovery depth:** Antigravity reads skills only one level deep (`skills/<name>/SKILL.md`) and does **not** recurse into category subfolders. OpenCode does recurse. That is why the skills stay in a flat layout with `design-it` acting as a router, and why skills carrying `disable-model-invocation: true` (10 of them) are only reachable via slash command in the IDE. See [`skills/README.md`](skills/README.md#how-skills-are-discovered).
-
-### Antigravity lifecycle hooks
-
-`hooks.json` (linked to `~/.gemini/config/hooks.json`) ports two of the OpenCode custom plugins to Antigravity's hook system. Hooks receive a JSON payload on stdin and must emit a JSON result on stdout.
-
-| Hook | Event | Script | Behaviour |
-|---|---|---|---|
-| env-protection | `PreToolUse` (matcher `.*`) | `hooks/env-protection.sh` | Denies file tools (`view_file`, `edit_file`, ...) targeting `.env` paths, shell commands referencing `.env`, and `export VAR=...` shell assignments |
-| notifications | `Stop` | `hooks/notify.sh` | Sends a native desktop notification when the loop stops |
-
-`inject-env` and `context-compaction` remain **OpenCode-only** — they rely on the OpenCode plugin API (`shell.env`, `experimental.session.compacting`) which has no Antigravity equivalent.
-
-### Extension differences: OpenCode vs Antigravity
-
-| Capability | OpenCode | Antigravity / Gemini |
-|---|---|---|
-| Skills discovery | `skills.paths` in `opencode.jsonc` | `~/.gemini/config/skills` symlink + `skills.json` |
-| MCP servers | `mcp` in `opencode.jsonc` | `mcp.json` + `gemini-extension.json` |
-| Global directives | `AGENTS.md` | `GEMINI.md` |
-| Custom agents | `~/.config/opencode/agents/*.md` | Not supported (CLI/IDE rely on hooks + MCP) |
-| Plugins | JS plugins (`plugins/`) + npm plugins | Not supported — use `hooks.json` |
-| Lifecycle hooks | `tool.execute.*`, `event`, `shell.env`, ... | `hooks.json` (`PreToolUse`, `Stop`, ...) |
-
 ### MCP Memory (per-user, local)
 
-The MCP memory server stores its knowledge graph (entities, relations, observations) in a **per-user local file** that is **never committed to the repo**. The location is injected via the `MEMORY_FILE_PATH` environment variable (see `opencode.jsonc` / `mcp.json`):
+The MCP memory server stores its knowledge graph (entities, relations, observations) in a **per-user local file** that is **never committed to the repo**. The location is injected via the `MEMORY_FILE_PATH` environment variable (see `opencode.jsonc`):
 
 - Unix: `~/.local/share/opencode/memory/<user>.jsonl`
 - Windows: `C:/Users/<user>/.local/share/opencode/memory/<user>.jsonl`
@@ -200,6 +164,30 @@ To move the graph to another machine, use the `/memory-export` and `/memory-impo
 ### OpenCode custom agents
 
 Files in `~/.agent/agents/` are symlinked into `~/.config/opencode/agents/`. Each agent is a Markdown file with frontmatter (`description`, `mode`, `permission`).
+
+---
+
+## 🛰️ Antigravity (App / IDE / CLI)
+
+Google Antigravity shares the **same open Agent Skills standard** ([agentskills.io](https://agentskills.io/home)) as OpenCode, so this repo's skills, rules, MCP servers and hooks are reused as-is — no duplication. `setup.sh` / `setup.ps1` link everything into Antigravity's global config directory (`~/.gemini/config`), which the App and the standalone IDE read:
+
+| Repo artifact | Antigravity link | Consumed by |
+|---|---|---|
+| `skills/` | `~/.gemini/config/skills` | App / IDE (global skills) |
+| `AGENTS.md` | `~/.gemini/config/AGENTS.md` | App / IDE (global `always_on` rule) |
+| `mcp.json` | `~/.gemini/config/mcp_config.json` | App / IDE (MCP servers) |
+| `hooks.json` | `~/.gemini/config/hooks.json` | App / IDE (lifecycle hooks) |
+
+Key points:
+
+- **Skills** are auto-discovered and each one is exposed as a slash command (`/<skill-name>`). Antigravity frontmatter only needs `name` + `description`; `disable-model-invocation` is not part of its schema.
+- **Rules:** instead of a duplicated `GEMINI.md`, the repo links `AGENTS.md` (the same file OpenCode reads) as an always-on global rule. Antigravity also supports modular rules in `~/.gemini/config/rules/*.md` (with a `trigger` frontmatter) and per-directory `AGENTS.md`.
+- **MCP** uses the standard `mcpServers` schema, so `mcp.json` is valid for both agents.
+- **Hooks** use Antigravity's native lifecycle events: `env-protection` runs on `PreToolUse` and `notifications` on `Stop`. On Windows, `setup.ps1` generates `hooks.json` from `hooks.windows.json` with absolute paths (Antigravity's hook shell cannot expand `~`).
+- **CLI:** the Antigravity CLI (`agy`) reads global skills from `~/.gemini/antigravity-cli/skills` and plugins from `~/.gemini/antigravity-cli/plugins`; it can also install the repo as a plugin bundle (`agy plugin install <path>`).
+- **Plugins:** the repo's own `plugins/` are OpenCode JS plugins (not portable). For a one-command install across Antigravity surfaces, the same skills/rules/MCP/hooks can be packaged as an Antigravity plugin (`plugin.json` + `skills/` + `rules/` + `mcp_config.json` + `hooks.json`).
+
+> **Legacy removed:** `GEMINI.md`, `skills.json` (explicit discovery) and the `extensions/lumusitech` Gemini CLI extension are no longer used — Antigravity now auto-discovers skills, reads `AGENTS.md` as a rule, and takes MCP from `mcp_config.json`.
 
 ---
 
@@ -226,7 +214,7 @@ To sync this workspace to a new machine:
    ./setup.sh
    ```
 
-This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/skills` & `~/.gemini/config/mcp.json`) and clean up legacy paths.
+This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/{skills,AGENTS.md,mcp_config.json,hooks.json}`) and clean up legacy paths.
 
 ### Windows (PowerShell 7)
 
@@ -257,7 +245,7 @@ Prerequisites: PowerShell 7, Git for Windows, Node.js 18+ (npm), Bun, GitHub CLI
    - `setup.cmd -ConfigureWindowsTerminal` — adds an "AI Workspace (pwsh 7)" profile to Windows Terminal and sets it as default (backs up `settings.json` first).
    - `setup.cmd --refresh-vendored-skills` — re-fetches vendored planning skills from upstream.
 
-The script configures the same links as on Unix (`~/.config/opencode`, `~/.gemini/config`, `~/.gemini/extensions`) and generates `~/.gemini/config/hooks.json` pointing at the PowerShell 7 hooks (`.ps1`) with absolute paths.
+The script configures the same links as on Unix (`~/.config/opencode` and `~/.gemini/config`) and generates `~/.gemini/config/hooks.json` from `hooks.windows.json` with absolute paths.
 
 **Links on Windows:** creating symbolic links requires Developer Mode (Settings → For developers) or an admin shell. `setup.ps1` detects the capability at startup: with symlink permission everything is linked live (a `git pull` propagates instantly); without it, directories use **junctions** (no admin needed) and files are **copied** — in that case re-run `setup.cmd` after every `git pull` to propagate updates.
 
@@ -281,8 +269,6 @@ if (Test-Path "$HOME\.agent\.env") {
 ```powershell
 if ($env:GITHUB_TOKEN) { "GITHUB_TOKEN: set (len=$($env:GITHUB_TOKEN.Length))" } else { "GITHUB_TOKEN: not set" }
 ```
-
-**Antigravity notifications on Windows** (hooks + OpenCode plugin) use the [BurntToast](https://github.com/Windos/BurntToast) PowerShell module when available: `Install-Module BurntToast -Scope CurrentUser`. Without it, notifications are silently skipped.
 
 ### Verify vendored skills (both platforms)
 

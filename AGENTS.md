@@ -1,6 +1,32 @@
 # 🤖 Global Agent Directives & Cognitive Architecture
 
-> Global rules and behavioral directives for OpenCode and Antigravity (TUI / IDE) across all projects and machines.
+> Global rules and behavioral directives for OpenCode and Antigravity (App / IDE / CLI) across all projects and machines.
+
+---
+
+## 🚦 Modo Operativo ODD (Organic Driven Development)
+
+ODD es el flujo por defecto, en todas las superficies (OpenCode y Antigravity). El trabajo se dimensiona por **entendimiento, riesgo y reanudabilidad**, nunca por número de archivos. Objetivo: abaratar las tareas sencillas sin perder contexto en las grandes.
+
+### Reglas duras
+- **Read-only hasta que se pida un cambio.** Preguntas, reviews, análisis y propuestas no mutan archivos ni el repo.
+- **Explorar antes de cambiar.** Entender el código y comprobar el resultado antes de cerrar.
+- **Tarea sencilla = inline.** Si está entendida, el riesgo es contenido y se puede reanudar desde el diff → resolverla en la misma sesión, **sin subagentes y sin documento de tarea**.
+- **No crear artefactos para trabajo pequeño.** Nada de specs, WBS, costes ni planes para un cambio trivial.
+
+### Enrutado (elegir la ruta más pequeña que sirva)
+1. **Direct Inline** — 1–3 archivos entendidos, sin investigación ni decisiones de diseño abiertas. Se resuelve aquí mismo.
+2. **Delegated Direct** — solo si hay una razón nombrable:
+   - **Exploración** que exige >1 lote inline (~3 llamadas / 10k tokens) o >5 búsquedas secuenciales → un explorador read-only devuelve un mapa con `path:line`.
+   - **Writers independientes** — 2+ unidades de comportamiento con superficies de edición disjuntas.
+   - **Backstop de contexto** — una sesión larga cede su siguiente unidad acotada a un worker fresco.
+   - **Verificador independiente** — cambio de alto riesgo (datos, seguridad, contratos compartidos, concurrencia, entrega) o sin test que detecte una regresión.
+   - Sin razón nombrable → **inline**.
+3. **Feature document** — solo para trabajo que **no** se reanuda desde el diff: varias sesiones, esperas externas o requisitos que no sobreviven a la compactación. Un único documento que cita el spec **verbatim** y permite retomar sin reconstruir el plan.
+4. **Pipeline pesado (Wayfinding/WBS/costes/tickets)** — **reservado** a esfuerzos multisesión genuinos. Nunca para tareas sencillas.
+
+### Test-first por defecto
+Cuando exista un test ejecutable y un resultado esperado claro: test que falla (RED) → hacerlo pasar (GREEN) → refactorizar con los tests en verde. Sin test significativo, explicar la excepción y ejecutar comprobaciones funcionales.
 
 ---
 
@@ -60,6 +86,7 @@
 ## 📚 Skill Usage & Fresher Rules
 - **Official First:** Prefer native skill definitions and documentation.
 - **No Stale Skills:** Never execute or rely on deprecated framework patterns (e.g., legacy AngularJS, RxJS-heavy Angular, Spring Boot 2.x).
+- **Cross-surface skills:** the same `SKILL.md` skills (open Agent Skills standard) are shared with Antigravity (App / IDE / CLI). Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only needs `name` + `description` frontmatter.
 
 ---
 
@@ -67,7 +94,7 @@
 
 - **Zona de degradación:** los modelos empiezan a degradarse a partir de ~40-44% de su ventana de contexto (en un modelo de 1M, ~400k tokens). Por debajo, comprimir es innecesario y degrada el contexto útil; por encima, se trabaja en la zona de degradación.
 - **Umbral de referencia:** ~40% del contexto (`maxContextLimit: "40%"` en `dcp.jsonc`).
-- **Mecanismo:** DCP (`@tarquinen/opencode-dcp`) es el guardrail. Al acercarse al 40%, empuja suavemente al modelo a comprimir (`nudgeForce: "soft"`) y la herramienta `compress` usa `permission: "ask"` → **pide permiso al usuario**.
+- **Mecanismo:** DCP (`@tarquinen/opencode-dcp`) es el guardrail. Al acercarse al 40%, empuja suavemente al modelo a comprimir (`nudgeForce: "soft"`). OpenCode V2 **no soporta** `permission: "ask"`, así que se usa `permission: "allow"`; la política de **pedir confirmación antes de comprimir** se mantiene como regla del agente.
 - **Decisión del usuario:** la decisión de comprimir la toma el usuario, nunca el agente. **No comprimir sin permiso explícito.** Si el usuario decide seguir sin comprimir, asume el riesgo de degradación.
 - **Auto-compactación nativa:** `compaction.auto: false`. OpenCode no compacta por su cuenta.
 - **Prohibido** reintroducir plugins que compriman automáticamente en umbrales bajos (ej. `magic-context` con fallback de 128k): compactaban prematuramente en modelos de 1M.
@@ -92,6 +119,8 @@
 ---
 
 ## 🗺️ Planificación de Trabajo Mayor a 1 Sesión (Wayfinding)
+
+> **Uso reservado.** Este pipeline es solo para esfuerzos multisesión genuinos. Para tareas sencillas aplica el **modo ODD** (inline, sin artefactos). No lo invoques para un cambio trivial.
 
 **Skills en `~/.agent/skills/`**: suite Wayfinder (Matt Pocock, parcialmente vendored) + WBS (agent-almanac) + skills custom (`estimate-costs`, `to-tickets` con mecánicas GitHub, `plan-phases-create`, `plan-phases-implement`).
 
