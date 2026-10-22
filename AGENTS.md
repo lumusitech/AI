@@ -26,7 +26,7 @@ ODD es el flujo por defecto, en todas las superficies (OpenCode y Antigravity). 
 4. **Pipeline pesado (Wayfinding/WBS/costes/tickets)** — **reservado** a esfuerzos multisesión genuinos. Nunca para tareas sencillas.
 
 ### Test-first por defecto
-Cuando exista un test ejecutable y un resultado esperado claro: test que falla (RED) → hacerlo pasar (GREEN) → refactorizar con los tests en verde. Sin test significativo, explicar la excepción y ejecutar comprobaciones funcionales.
+Cuando exista un test ejecutable, determinista y con resultado esperado claro: test que falla (RED) → cambio mínimo (GREEN) → no-regresión y chequeo diferencial (PRESERVE) → refactorizar con los tests en verde (REFACTOR). Sin test significativo, explicar la excepción y ejecutar comprobaciones funcionales. Para el procedimiento detallado usa `/tdd`; para detalles por framework, `jest-skill` / `junit-5-skill` / `cypress-skill`.
 
 ---
 
