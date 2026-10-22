@@ -13,8 +13,8 @@
       "args": []
     },
     "github": {
-      "command": "node",
-      "args": ["scripts/github-mcp-bridge.mjs"],
+      "command": "github-mcp-bridge",
+      "args": [],
       "env": {}
     },
     "memory": {
