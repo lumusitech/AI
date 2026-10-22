@@ -9,7 +9,7 @@
 - **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
 - `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
-Total: **121 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **125 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (17)
 
@@ -159,8 +159,9 @@ Total: **121 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`git-pr-workflows-git-workflow`** - Orchestrate review, tests, commits, branch pushes, and pull-request creation with parallel agents. Use when completed changes must move through validation into a PR or guarded merge.
 - **`github-automation`** - Operate GitHub issues, pull requests, branches, checks, workflows, and permissions through Rube MCP. Use when GitHub work must be queried or changed programmatically with repository-policy safeguards.
 
-## 🧪 Testing  (4)
+## 🧪 Testing  (5)
 
+- **`tdd`** - Apply test-first development (RED → GREEN → PRESERVE → REFACTOR) to a behavior change with a runnable deterministic test and a clear expected outcome. Use when implementing a requested rule or touching an existing command/option that shares changed code, and a relevant test exists. Adapted from gentle-ai's ODD test-first policy.
 - **`cypress-skill`** - Generates production-grade Cypress E2E and component tests in JavaScript or TypeScript. Supports local execution and TestMu AI cloud. Use when the user asks to write Cypress tests, set up Cypress, test with cy commands, or mentions "Cypress", "cy.visit", "cy.get", "cy.intercept".
 - **`jest-skill`** - Generates Jest unit and integration tests in JavaScript or TypeScript. Covers mocking, snapshots, async testing, and React component testing. Use when user mentions "Jest", "describe/it/expect", "jest.mock", "toMatchSnapshot". Triggers on: "Jest", "expect().toBe()", "jest.mock", "test()".
 - **`junit-5-skill`** - Generates production-grade JUnit 5 unit and integration tests in Java. Covers assertions, parameterized tests, lifecycle hooks, mocking with Mockito, and nested tests. Use when user mentions "JUnit", "JUnit 5", "@Test", "assertEquals", "Assertions", "Java unit test". Triggers on: "@Test", "Mockito", "parameterized tests".
