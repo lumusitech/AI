@@ -1,8 +1,9 @@
 #Requires -Version 7.0
 # Environment protection hook for Antigravity / Gemini CLI (Windows).
 #
-# Blocks file tools (view_file, edit_file, write_file, create_file, patch_file)
-# from touching any path that contains a `.env` segment, blocks shell commands
+# Blocks file tools (view_file, write_to_file, replace_file_content,
+# multi_replace_file_content) from touching any path that contains a `.env`
+# segment, blocks shell commands
 # that reference `.env` secrets, and blocks environment-variable assignments
 # (`export VAR=...`, `$env:VAR=...`, `setx VAR ...`, SetEnvironmentVariable),
 # mirroring the behaviour of the OpenCode `env-protection` plugin and the
@@ -55,7 +56,12 @@ function Test-SensitivePath([string]$value) {
     return $false
 }
 
-$FILE_TOOLS = @('view_file', 'edit_file', 'write_file', 'create_file', 'patch_file')
+$FILE_TOOLS = @(
+    # Current Antigravity tool names.
+    'view_file', 'write_to_file', 'replace_file_content', 'multi_replace_file_content',
+    # Legacy / alias names kept for backward compatibility.
+    'edit_file', 'write_file', 'create_file', 'patch_file'
+)
 
 if ($FILE_TOOLS -contains $name) {
     foreach ($v in $script:collected) {

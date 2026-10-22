@@ -4,7 +4,7 @@
 # Lumusitech AI Workspace - Machine Setup Script (Windows / PowerShell 7)
 # ==============================================================================
 # Idempotent setup script to link custom skills, MCP configurations, and global
-# agent directives for OpenCode and Antigravity (TUI / IDE) on Windows.
+# agent directives for OpenCode and Antigravity on Windows.
 # Mirrors ./setup.sh (Unix). Run with:
 #   setup.cmd                              (recommended wrapper)
 #   pwsh -NoProfile -ExecutionPolicy Bypass -File setup.ps1
@@ -193,15 +193,16 @@ if (-not (Test-Path -LiteralPath $ENV_FILE)) {
 # ==============================================================================
 # 2. Antigravity Configuration Links (~/.gemini/config)
 # ==============================================================================
+# Antigravity (App / IDE / CLI) reads skills, rules, MCP servers and lifecycle
+# hooks from its global config directory. Everything links back to this repo
+# (single source of truth), so a `git pull` propagates to both agents.
 $GEMINI_CONFIG_DIR = Join-Path $HOME '.gemini\config'
 
-Link-Dir -Path (Join-Path $GEMINI_CONFIG_DIR 'skills')     -Target (Join-Path $REPO_DIR 'skills')
-Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'skills.json') -Source (Join-Path $REPO_DIR 'skills.json')
-Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'GEMINI.md')   -Source (Join-Path $REPO_DIR 'GEMINI.md')
-Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp.json')    -Source (Join-Path $REPO_DIR 'mcp.json')
+Link-Dir  -Path (Join-Path $GEMINI_CONFIG_DIR 'skills')          -Target (Join-Path $REPO_DIR 'skills')
+Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'AGENTS.md')       -Source (Join-Path $REPO_DIR 'AGENTS.md')
 Link-File -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json') -Source (Join-Path $REPO_DIR 'mcp.json')
 
-# hooks.json: generated with absolute Windows paths (Antigravity runs hook
+# hooks.json is generated with absolute Windows paths (Antigravity runs hook
 # commands through a shell that cannot expand `~`). Written only when content
 # changes so re-runs stay quiet.
 $HOOKS_TEMPLATE = Join-Path $REPO_DIR 'hooks.windows.json'
@@ -224,44 +225,29 @@ if (Test-Path -LiteralPath $HOOKS_TEMPLATE) {
     Write-Warning "hooks.windows.json not found; skipping hooks.json generation."
 }
 
-# Remove legacy hardcoded backup tokens if existing
-Remove-Item -Path (Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json.backup') -Force -ErrorAction SilentlyContinue
-
-$SETTINGS_PATH = Join-Path $HOME '.gemini\settings.json'
-if (Test-Path -LiteralPath $SETTINGS_PATH) {
-    Write-Host "🧹 Cleaning hardcoded secrets from ${SETTINGS_PATH}..."
-    try {
-        $settings = Get-Content -LiteralPath $SETTINGS_PATH -Raw | ConvertFrom-Json
-        $changed = $false
-        $serversProp = $settings.PSObject.Properties['mcpServers']
-        if ($null -ne $serversProp) {
-            foreach ($server in $serversProp.Value.PSObject.Properties) {
-                if ($server.Value -is [PSCustomObject]) {
-                    $headersProp = $server.Value.PSObject.Properties['headers']
-                    if ($null -ne $headersProp) {
-                        $server.Value.headers = @{}
-                        $changed = $true
-                    }
-                }
-            }
-        }
-        if ($changed) {
-            $settings | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $SETTINGS_PATH -Encoding utf8NoBOM
-            Write-Host "  ✅ Secrets removed from settings.json"
-        } else {
-            Write-Host "  ℹ️  settings.json: no hardcoded MCP secrets found"
-        }
-    } catch {
-        Write-Warning "  Could not parse ${SETTINGS_PATH}; skipping secret cleanup."
+# Remove artifacts from the previous Antigravity wiring (obsolete names).
+# Get-Item -Force also matches dangling symlinks (Test-Path would miss them).
+foreach ($legacy in @('skills.json', 'GEMINI.md', 'mcp.json', 'mcp_config.json.backup')) {
+    $legacyPath = Join-Path $GEMINI_CONFIG_DIR $legacy
+    if ($null -ne (Get-Item -LiteralPath $legacyPath -Force -ErrorAction SilentlyContinue)) {
+        Write-Host "🧹 Removing obsolete Antigravity artifact ${legacyPath}..."
+        Remove-Item -Path $legacyPath -Force -ErrorAction SilentlyContinue
+    }
+}
+$legacyExt = Join-Path $HOME '.gemini\extensions\lumusitech'
+$legacyExtItem = Get-Item -LiteralPath $legacyExt -Force -ErrorAction SilentlyContinue
+if ($null -ne $legacyExtItem) {
+    Write-Host "🧹 Removing obsolete Gemini extension link..."
+    if ($legacyExtItem.LinkType) {
+        # Remove the reparse point without touching its target.
+        [System.IO.Directory]::Delete($legacyExt, $false)
+    } else {
+        Remove-Item -Path $legacyExt -Force -Recurse -ErrorAction SilentlyContinue
     }
 }
 
-# Link Antigravity/Gemini extension (best-effort; Antigravity bundles its own CLI)
-$GEMINI_EXT_DIR = Join-Path $HOME '.gemini\extensions'
-Link-Dir -Path (Join-Path $GEMINI_EXT_DIR 'lumusitech') -Target (Join-Path $REPO_DIR 'extensions\lumusitech')
-
 # ==============================================================================
-# 3. OpenCode Configuration Links (~/.config/opencode)
+# 3. OpenCode Configuration Links (~/.config\opencode)
 # ==============================================================================
 $OPENCODE_CONFIG_DIR = Join-Path $HOME '.config\opencode'
 
@@ -297,7 +283,7 @@ Write-Host "🧠 Setting up per-user local memory database..."
 & (Join-Path $REPO_DIR 'scripts\memory-setup.ps1')
 
 # 3c. Install MCP servers locally and expose their binaries on PATH.
-# Removes `npx -y <pkg>` from opencode.jsonc/mcp.json so opencode and Antigravity
+# Removes `npx -y <pkg>` from opencode.jsonc so opencode
 # no longer resolve/download packages from the registry at startup.
 Write-Host "📦 Installing local MCP servers (package.json)..."
 $LOCAL_BIN_DIR = Join-Path $HOME '.local\bin'
@@ -421,6 +407,28 @@ if (Test-Path -LiteralPath $envFile) {
     }
     [System.IO.File]::WriteAllLines($envFile, $lines, (New-Object System.Text.UTF8Encoding($false)))
 }
+
+# Antigravity MCP config: Antigravity does not expand ${VAR} in mcp_config.json
+# env values, so generate the file with machine-specific values resolved.
+$MCP_TARGET = Join-Path $GEMINI_CONFIG_DIR 'mcp_config.json'
+if (Test-Path -LiteralPath $MCP_TARGET) { Remove-Item -Path $MCP_TARGET -Force -ErrorAction SilentlyContinue }
+$mcpData = Get-Content -LiteralPath (Join-Path $REPO_DIR 'mcp.json') -Raw | ConvertFrom-Json
+$memPath = ''
+if (Test-Path -LiteralPath $envFile) {
+    $memMatch = Select-String -LiteralPath $envFile -Pattern '^\s*MEMORY_FILE_PATH=(.*)$' | Select-Object -Last 1
+    if ($memMatch) { $memPath = $memMatch.Matches[0].Groups[1].Value.Trim().Trim('"') }
+}
+foreach ($serverProp in $mcpData.mcpServers.PSObject.Properties) {
+    $envProp = $serverProp.Value.PSObject.Properties['env']
+    if ($null -ne $envProp -and $null -ne $envProp.Value) {
+        foreach ($p in $envProp.Value.PSObject.Properties) {
+            if ($p.Value -eq '${MEMORY_FILE_PATH}' -and $memPath) { $p.Value = $memPath }
+            elseif ($p.Value -eq '${PLAYWRIGHT_BROWSER}') { $p.Value = $PLAYWRIGHT_BROWSER }
+        }
+    }
+}
+$mcpData | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $MCP_TARGET -Encoding utf8NoBOM
+Write-Host "  ✅ Antigravity MCP config generated (env resolved): ${MCP_TARGET}"
 
 # ==============================================================================
 # 4. Clean up legacy skill & temporary directories to prevent duplicate loading
@@ -576,8 +584,7 @@ $SECRET_PATTERNS = @(
 $FOUND_SECRET = $false
 $CONFIG_FILES = @(
     (Join-Path $REPO_DIR 'mcp.json'),
-    (Join-Path $REPO_DIR 'opencode.jsonc'),
-    (Join-Path $REPO_DIR 'extensions\lumusitech\gemini-extension.json')
+    (Join-Path $REPO_DIR 'opencode.jsonc')
 )
 foreach ($cfg in $CONFIG_FILES) {
     if (-not (Test-Path -LiteralPath $cfg)) { continue }
@@ -711,7 +718,9 @@ Write-Host "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 Write-Host "  • Memoria Local:        $env:MEMORY_FILE_PATH (o ~/.local/share/opencode/memory/<user>.jsonl)"
 Write-Host "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}\AGENTS.md"
 Write-Host "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}\skills"
-Write-Host "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}\mcp.json"
+Write-Host "  • Antigravity Rules:    ${GEMINI_CONFIG_DIR}\AGENTS.md"
+Write-Host "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}\mcp_config.json"
+Write-Host "  • Antigravity Hooks:    ${GEMINI_CONFIG_DIR}\hooks.json"
 Write-Host "  • MCPs Configured:      context7, codegraph, codebase-memory, github, memory, playwright"
 Write-Host "----------------------------------------------------------------------"
 Write-Host "  💡 Planning pipeline: wayfinder → setup-matt-pocock-skills → to-spec →"

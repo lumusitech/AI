@@ -1,12 +1,13 @@
 # Skills Index
 
-> Navegable index of the skills in this workspace. Use this to find the right skill folder quickly. Each skill lives in its own directory (`skills/<name>/SKILL.md`) and is auto-discovered by OpenCode and Antigravity.
+> Navegable index of the skills in this workspace. Use this to find the right skill folder quickly. Each skill lives in its own directory (`skills/<name>/SKILL.md`) and is auto-discovered by OpenCode.
 
 ## How skills are discovered
 
-- **OpenCode** discovers `SKILL.md` files recursively, so nested category subfolders would work — but Antigravity does **not**.
-- **Antigravity** reads only one level deep (`skills/<name>/SKILL.md`): nested sub-skills (e.g. the 48 `design-it/*` styles) are **not** listed as individual skills there. That is why the layout stays flat and `design-it` acts as a router. Do not reorganize skills into category subfolders.
-- Skills with `disable-model-invocation: true` (currently 10: `ask-matt`, `cyber-audit`, `grill-with-docs`, `plan-phases-create`, `plan-phases-implement`, `setup-matt-pocock-skills`, `to-spec`, `to-tickets`, `triage`, `wayfinder`) are hidden from the model's skill inventory and are only invoked via slash command (`/plan-phases-create`, etc.).
+- **OpenCode** discovers `SKILL.md` files recursively. The layout stays flat (`skills/<name>/`) so every skill is discoverable, with `design-it` acting as a router for its 48 sub-styles.
+- OpenCode injects only **name + description** into the model's `<available_skills>` each turn; the full `SKILL.md` loads on invocation.
+- **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
+- `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
 Total: **121 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 

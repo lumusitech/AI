@@ -7,10 +7,7 @@
   "provider": {
     "openrouter": {
       "order": [
-        "DeepInfra",
-        "Together",
-        "Fireworks",
-        "DeepSeek"
+        "sail-research"
       ],
       "allow_fallbacks": true
     }

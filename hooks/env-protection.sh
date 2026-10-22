@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Environment protection hook for Antigravity / Gemini CLI.
 #
-# Blocks file tools (view_file, edit_file, write_file, create_file) from
-# touching any path that contains a `.env` segment, blocks shell commands
+# Blocks file tools (view_file, write_to_file, replace_file_content,
+# multi_replace_file_content) from touching any path that contains a `.env`
+# segment, blocks shell commands
 # that reference `.env` secrets, and blocks `export VAR=...` assignments
 # (but allows commands that merely reference the word "export", e.g. grep),
 # mirroring the behaviour of the OpenCode `env-protection` plugin.
@@ -27,7 +28,12 @@ tool_call = payload.get("toolCall") or {}
 name = tool_call.get("name") or ""
 args = tool_call.get("args") or {}
 
-FILE_TOOLS = {"view_file", "edit_file", "write_file", "create_file", "patch_file"}
+FILE_TOOLS = {
+    # Current Antigravity tool names.
+    "view_file", "write_to_file", "replace_file_content", "multi_replace_file_content",
+    # Legacy / alias names kept for backward compatibility.
+    "edit_file", "write_file", "create_file", "patch_file",
+}
 
 values = []
 

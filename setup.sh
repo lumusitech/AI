@@ -4,7 +4,7 @@
 # Lumusitech AI Workspace - Machine Setup Script
 # ==============================================================================
 # Idempotent setup script to link custom skills, MCP configurations, and global
-# agent directives for OpenCode and Antigravity (TUI / IDE) across machines.
+# agent directives for OpenCode and Antigravity across machines.
 # ==============================================================================
 
 set -euo pipefail
@@ -48,56 +48,39 @@ if [ -f "${REPO_DIR}/.env" ]; then
 fi
 
 # 2. Antigravity Configuration Links (~/.gemini/config)
+# Antigravity (App / IDE / CLI) reads skills, rules, MCP servers and lifecycle
+# hooks from its global config directory. Everything links back to this repo
+# (single source of truth), so a `git pull` propagates to both agents.
 GEMINI_CONFIG_DIR="${HOME}/.gemini/config"
 mkdir -p "${GEMINI_CONFIG_DIR}"
 
+# Global skills (auto-discovered; same open SKILL.md standard as OpenCode).
 echo "🔗 Linking skills to Antigravity global config (${GEMINI_CONFIG_DIR}/skills)..."
 link_with_skip "${REPO_DIR}/skills" "${GEMINI_CONFIG_DIR}/skills"
 
-echo "🔗 Linking skills.json to Antigravity global config (${GEMINI_CONFIG_DIR}/skills.json)..."
-link_with_skip "${REPO_DIR}/skills.json" "${GEMINI_CONFIG_DIR}/skills.json"
+# Global rules: Antigravity reads AGENTS.md as an always-on rule. We link the
+# single source of truth instead of duplicating it into a separate GEMINI.md.
+echo "🔗 Linking AGENTS.md to Antigravity global rules (${GEMINI_CONFIG_DIR}/AGENTS.md)..."
+link_with_skip "${REPO_DIR}/AGENTS.md" "${GEMINI_CONFIG_DIR}/AGENTS.md"
 
+# MCP servers (standard `mcpServers` schema). Generated further below with the
+# machine-specific env values resolved (Antigravity does not expand ${VAR}).
+
+# Lifecycle hooks (PreToolUse env-protection + Stop notification).
 echo "🔗 Linking hooks.json to Antigravity global config (${GEMINI_CONFIG_DIR}/hooks.json)..."
 link_with_skip "${REPO_DIR}/hooks.json" "${GEMINI_CONFIG_DIR}/hooks.json"
 
-echo "🔗 Linking mcp.json to Antigravity global config (${GEMINI_CONFIG_DIR}/mcp.json and mcp_config.json)..."
-link_with_skip "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp.json"
-link_with_skip "${REPO_DIR}/mcp.json" "${GEMINI_CONFIG_DIR}/mcp_config.json"
-
-echo "🔗 Linking GEMINI.md to Antigravity global config (${GEMINI_CONFIG_DIR}/GEMINI.md)..."
-link_with_skip "${REPO_DIR}/GEMINI.md" "${GEMINI_CONFIG_DIR}/GEMINI.md"
-
-# Remove legacy hardcoded backup tokens if existing
-if [ -f "${GEMINI_CONFIG_DIR}/mcp_config.json.backup" ]; then
-    rm -f "${GEMINI_CONFIG_DIR}/mcp_config.json.backup"
+# Remove artifacts from the previous Antigravity wiring (obsolete names).
+for legacy in skills.json GEMINI.md mcp.json mcp_config.json.backup; do
+    if [ -e "${GEMINI_CONFIG_DIR}/${legacy}" ] || [ -L "${GEMINI_CONFIG_DIR}/${legacy}" ]; then
+        echo "🧹 Removing obsolete Antigravity artifact ${GEMINI_CONFIG_DIR}/${legacy}..."
+        rm -f "${GEMINI_CONFIG_DIR}/${legacy}"
+    fi
+done
+if [ -L "${HOME}/.gemini/extensions/lumusitech" ]; then
+    echo "🧹 Removing obsolete Gemini extension link (~/.gemini/extensions/lumusitech)..."
+    rm -f "${HOME}/.gemini/extensions/lumusitech"
 fi
-if [ -f "${HOME}/.gemini/settings.json" ]; then
-    echo "🧹 Cleaning hardcoded secrets from ${HOME}/.gemini/settings.json..."
-    python3 - "${HOME}/.gemini/settings.json" <<'PYEOF'
-import json, sys
-path = sys.argv[1]
-with open(path, encoding="utf-8") as f:
-    data = json.load(f)
-changed = False
-if "mcpServers" in data:
-    for server in data["mcpServers"].values():
-        if isinstance(server, dict) and "headers" in server:
-            server["headers"] = {}
-            changed = True
-if changed:
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-    print("  ✅ Secrets removed from settings.json")
-else:
-    print("  ℹ️  settings.json: no hardcoded MCP secrets found")
-PYEOF
-fi
-
-# Link Antigravity/Gemini extension (best-effort; Antigravity bundles its own CLI)
-GEMINI_EXT_DIR="${HOME}/.gemini/extensions"
-mkdir -p "${GEMINI_EXT_DIR}"
-link_with_skip "${REPO_DIR}/extensions/lumusitech" "${GEMINI_EXT_DIR}/lumusitech"
-echo "🔗 Linked Antigravity/Gemini extension (${GEMINI_EXT_DIR}/lumusitech)"
 
 # 3. OpenCode Configuration Links (~/.config/opencode)
 OPENCODE_CONFIG_DIR="${HOME}/.config/opencode"
@@ -142,8 +125,8 @@ echo "🧠 Setting up per-user local memory database..."
 bash "${REPO_DIR}/scripts/memory-setup.sh"
 
 # 3c. Install MCP servers locally and expose their binaries on PATH.
-# This removes `npx -y <pkg>` from opencode.jsonc/mcp.json, so opencode and
-# Antigravity no longer resolve/download packages from the registry at startup.
+# This removes `npx -y <pkg>` from opencode.jsonc, so opencode no
+# longer resolves/downloads packages from the registry at startup.
 echo "📦 Installing local MCP servers (package.json)..."
 LOCAL_BIN_DIR="${HOME}/.local/bin"
 mkdir -p "${LOCAL_BIN_DIR}"
@@ -233,6 +216,35 @@ if [ -f "${REPO_DIR}/.env" ]; then
         printf '\n# Resolved by setup.sh (chrome if installed, else chromium). Do not edit manually.\nPLAYWRIGHT_BROWSER=%s\n' "${PLAYWRIGHT_BROWSER}" >> "${REPO_DIR}/.env"
     fi
 fi
+
+# Antigravity MCP config: Antigravity does not expand ${VAR} in mcp_config.json
+# env values, so generate the file with the machine-specific values resolved.
+MCP_TARGET="${GEMINI_CONFIG_DIR}/mcp_config.json"
+rm -f "${MCP_TARGET}"
+MEM_PATH_RESOLVED=""
+if [ -f "${REPO_DIR}/.env" ]; then
+    MEM_PATH_RESOLVED="$(grep -E '^MEMORY_FILE_PATH=' "${REPO_DIR}/.env" | tail -n1 | cut -d= -f2- | tr -d '"')"
+fi
+python3 - "${REPO_DIR}/mcp.json" "${MCP_TARGET}" "${MEM_PATH_RESOLVED}" "${PLAYWRIGHT_BROWSER}" <<'PYEOF'
+import json, sys
+
+src, dst, mem_path, browser = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with open(src, encoding="utf-8") as f:
+    data = json.load(f)
+
+subs = {"${MEMORY_FILE_PATH}": mem_path, "${PLAYWRIGHT_BROWSER}": browser}
+for server in data.get("mcpServers", {}).values():
+    env = server.get("env")
+    if isinstance(env, dict):
+        for key, val in list(env.items()):
+            if isinstance(val, str) and val in subs and subs[val]:
+                env[key] = subs[val]
+
+with open(dst, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+print(f"  ✅ Antigravity MCP config generated (env resolved): {dst}")
+PYEOF
 
 # 4. Clean up legacy skill & temporary directories to prevent duplicate loading & save space
 echo "🧹 Cleaning legacy paths (~/.agents, ~/.claude, ~/temp/antigravity-awesome-skills)..."
@@ -371,7 +383,7 @@ SECRET_PATTERNS=(
   "Bearer [A-Za-z0-9]"
 )
 FOUND_SECRET=0
-for cfg in "${REPO_DIR}/mcp.json" "${REPO_DIR}/opencode.jsonc" "${REPO_DIR}/extensions/lumusitech/gemini-extension.json"; do
+for cfg in "${REPO_DIR}/mcp.json" "${REPO_DIR}/opencode.jsonc"; do
   [ -f "${cfg}" ] || continue
   for pat in "${SECRET_PATTERNS[@]}"; do
     if grep -qE "${pat}" "${cfg}"; then
@@ -428,7 +440,8 @@ echo "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 echo "  • Memoria Local:        ${MEMORY_FILE_PATH:-~/.local/share/opencode/memory/<user>.jsonl}"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
 echo "  • Antigravity Skills:   ${GEMINI_CONFIG_DIR}/skills"
-echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp.json"
+echo "  • Antigravity Rules:    ${GEMINI_CONFIG_DIR}/AGENTS.md"
+echo "  • Antigravity MCPs:     ${GEMINI_CONFIG_DIR}/mcp_config.json"
 echo "  • Antigravity Hooks:    ${GEMINI_CONFIG_DIR}/hooks.json"
 echo "  • MCPs Configured:      context7, codegraph, codebase-memory, github, memory, playwright"
 echo "----------------------------------------------------------------------"

@@ -6,7 +6,7 @@
   "pruneNotificationType": "chat",
   "compress": {
     "mode": "range",
-    "permission": "ask",
+    "permission": "allow",
     "showCompression": true,
     "summaryBuffer": true,
     "maxContextLimit": "40%",
