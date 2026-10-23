@@ -9,7 +9,7 @@
 - **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
 - `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
-Total: **128 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **130 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (17)
 
@@ -168,10 +168,12 @@ Total: **128 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`junit-5-skill`** - Generates production-grade JUnit 5 unit and integration tests in Java. Covers assertions, parameterized tests, lifecycle hooks, mocking with Mockito, and nested tests. Use when user mentions "JUnit", "JUnit 5", "@Test", "assertEquals", "Assertions", "Java unit test". Triggers on: "@Test", "Mockito", "parameterized tests".
 - **`e2e-testing`** - End-to-end testing workflow with Playwright for browser automation, visual regression, cross-browser testing, and CI/CD integration.
 
-## ⚖️ Code Quality & Engineering  (10)
+## ⚖️ Code Quality & Engineering  (12)
 
 - **`clean-code`** - This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\
 - **`review`** - Run a read-only review of a diff or PR through a selected lens (risk / readability / reliability / resilience). Report findings only; never fix. Use after a change or before merge to get an independent, risk-tiered pass. Adapted from gentle-ai's review lenses.
+- **`rdd`** - Receipt-Driven Development: freeze the exact candidate before review, set depth from the risk tier, review as a separate informational choice. Adapted from gentle-ai's RDD.
+- **`judgment-day`** - Dual blind adversarial review: two independent read-only judges on one frozen target, fix only what both confirm, at most two rounds. Adapted from gentle-ai's judgment-day.
 - **`skill-creator`** - Create LLM-first skills with valid frontmatter, a concise body, and local references. Use when authoring a new SKILL.md, documenting an AI usage pattern, or when project conventions differ from generic best practices. Adapted from gentle-ai's skill-creator.
 - **`code-review-excellence`** - Improve code-review process and culture: constructive feedback, systematic analysis, and collaborative review practices. Use when establishing review workflows, mentoring reviewers, or planning review strategies.
 - **`code-reviewer`** - Perform rigorous code reviews of diffs and pull requests: correctness, security, performance, and readability. Use when reviewing a PR, a diff, or specific code for issues before merge.

@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~128), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `skill-creator` / `work-unit-commits`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: Streamlined curated skills (~130), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -113,7 +113,7 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 
 ```text
 ~/.agent/
-├── skills/                 # ~128 curated skills + 4 custom stack + 13 planning skills
+├── skills/                 # ~130 curated skills + 4 custom stack + 13 planning skills
 │   ├── wayfinder/          # 🗺️ Wayfinder suite (Matt Pocock): wayfinder, setup-matt-pocock-skills,
 │   │                       #    to-spec, grilling, grill-with-docs, research, triage
 │   ├── ask-matt/           # 🧭 Router de skills (custom, referencia /plan-phases-implement)
@@ -324,7 +324,26 @@ Planning skills come from two upstream sources (MIT) plus custom skills committe
 
 ---
 
+## 🧭 Método de trabajo (ODD + review)
+
+El flujo por defecto es **ODD** (ver la sección *Modo Operativo ODD* en `AGENTS.md`): read-only hasta que se pide un cambio, **inline-first**, delegar solo con una razón nombrable, y sin artefactos para trabajo pequeño. Este pipeline pesado queda **reservado** a esfuerzos multisesión.
+
+Piezas de método (skills portadas de [gentle-ai](https://github.com/Gentleman-Programming/gentle-ai), adaptadas a nuestro modelo skill-céntrico, sin su binario Go):
+
+- **`/tdd`** — test-first: RED → GREEN → PRESERVE → REFACTOR, con un RED por regla y no-regresión por comando tocado.
+- **`/work-unit-commits`** — commits por unidad de comportamiento (tests+docs con el código), listos para PRs encadenadas.
+- **`/review`** — review **read-only** con lentes por riesgo: R1 risk, R2 readability, R3 reliability, R4 resilience. Reporta, nunca corrige.
+- **`/rdd`** — Receipt-Driven Development: **congela el candidato** antes de revisarlo, profundidad por **riesgo** del candidato, y resultado **informacional** (no autoriza commit/push/PR/release).
+- **`/judgment-day`** — review **adversarial doble ciego**: dos jueces read-only en paralelo sobre un objetivo congelado; solo se corrige lo confirmado por **ambos**; terminal `APPROVED | ESCALATED`.
+- **`/skill-creator`** — autorar skills LLM-first.
+
+> Review y delivery son decisiones **separadas**: un review/veredicto **nunca** autoriza commit, push, PR o release. Eso sigue la política ordinaria del repo.
+
+---
+
 ## 🗺️ Planning Workflow (Wayfinding + WBS + Costs)
+
+> **Uso reservado** a esfuerzos multisesión genuinos (ver *Método de trabajo* arriba).
 
 For work larger than one agent session, the pipeline goes **document → decisions → WBS → costs → tickets**:
 
