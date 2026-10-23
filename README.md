@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~130), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: Streamlined curated skills (~131), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -113,7 +113,7 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 
 ```text
 ~/.agent/
-├── skills/                 # ~130 curated skills + 4 custom stack + 13 planning skills
+├── skills/                 # ~131 curated skills + 4 custom stack + 13 planning skills
 │   ├── wayfinder/          # 🗺️ Wayfinder suite (Matt Pocock): wayfinder, setup-matt-pocock-skills,
 │   │                       #    to-spec, grilling, grill-with-docs, research, triage
 │   ├── ask-matt/           # 🧭 Router de skills (custom, referencia /plan-phases-implement)
@@ -188,6 +188,11 @@ The MCP memory server stores its knowledge graph (entities, relations, observati
 > **Why forward slashes on Windows?** opencode substitutes `{env:MEMORY_FILE_PATH}` in `opencode.jsonc` **verbatim** (without JSON-escaping the value). A Windows path with backslashes (`C:\Users\...`) would inject invalid JSON escape sequences and make opencode fail with `opencode.jsonc is not valid JSON(C)`. `memory-setup.ps1` therefore normalizes the path to forward slashes (`/`), which Windows, PowerShell and Node all accept.
 
 To move the graph to another machine, use the `/memory-export` and `/memory-import` skills (a Markdown document with an embedded JSONL block) — the file itself is never synced via git.
+
+**Convention (`/memory` skill).** Because the graph is per-user and shared across repos, two disciplines keep it trustworthy (ideas adapted from [Engram](https://github.com/Gentleman-Programming/engram) without its binary):
+
+- **Project scoping** — derive a **project key** from the git remote (`owner/repo`, else the repo basename) and prefix every entity (`<project-key>:<entity>`); recall filtered to the current project unless cross-project recall is explicitly requested.
+- **Staleness** — every observation records a **date + reference** (commit/path/symbol). On recall, **verify against current evidence**; a memory whose reference no longer matches is **suspicious context, not fact**.
 
 ### OpenCode custom agents
 

@@ -9,7 +9,7 @@
 - **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
 - `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
-Total: **130 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
 ## 🗺️ Planning & Wayfinding  (17)
 
@@ -111,13 +111,14 @@ Total: **130 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`database-optimizer`** - Tune database performance: slow queries, index optimization, EXPLAIN analysis, and scalability bottlenecks. Use when a database is slow, queries regress, or the data layer needs optimization.
 - **`drizzle-orm-expert`** - Expert in Drizzle ORM for TypeScript — schema design, relational queries, migrations, and serverless database integration. Use when building type-safe database layers with Drizzle.
 
-## 🤖 AI / LLM / Agents  (13)
+## 🤖 AI / LLM / Agents  (14)
 
 - **`ai-engineer`** - Build production-ready LLM applications, advanced RAG systems, and intelligent agents. Implements vector search, multimodal AI, agent orchestration, and enterprise AI integrations.
 - **`agent-creator`** - Create custom AI subagents with proper plugin structure, persona generation, and companion routing skills.
 - **`agent-memory`** - Use the agentMemory library (webzler/agentMemory): persistent, searchable knowledge management for AI agents. Use when integrating, configuring, or extending this specific agentMemory package.
 - **`agent-memory-mcp`** - Expose agent memory through MCP: architecture, patterns, and decisions for connecting AI agents to persistent memory via the memory MCP server. Use when wiring memory into agents through MCP tools.
 - **`agent-memory-systems`** - Design and architect AI agent memory systems: context windows, short-term and long-term memory, vector stores, and cognitive architectures. Use when planning how an agent should persist, retrieve, and organize knowledge.
+- **`memory`** - Convention for the MCP memory knowledge graph — namespace entities by project key, record a date+reference on every observation, and verify staleness before trusting a recalled memory. Use when saving or recalling long-term memory, or consolidating the graph. Adapted from Engram's project-scoping and staleness ideas.
 - **`agent-orchestration-improve-agent`** - Systematic improvement of existing agents through performance analysis, prompt engineering, and continuous iteration.
 - **`agent-orchestrator`** - Meta-skill that orchestrates all agents in the ecosystem: automatic skill scanning, capability matching, multi-skill workflow coordination, and registry management.
 - **`autonomous-agents`** - Design, build, and orchestrate autonomous AI agents that decompose goals, plan, use tools, and self-correct. Use when implementing agent loops, tool-calling, multi-agent systems, or agent reliability.
