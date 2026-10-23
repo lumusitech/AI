@@ -9,10 +9,11 @@
 - **Antigravity (App / IDE / CLI)** uses the same open Agent Skills standard (`agentskills.io`). `setup.sh` / `setup.ps1` link this `skills/` folder into `~/.gemini/config/skills` (App/IDE global) so every skill is reused as-is; the CLI reads `~/.gemini/antigravity-cli/skills`. Antigravity auto-exposes each skill as a slash command (`/<skill-name>`) and only requires `name` + `description` frontmatter.
 - `disable-model-invocation: true` is a Claude/Antigravity convention and is **ignored by OpenCode**. To hide a skill from OpenCode's model inventory, use `metadata.opencode/autoinvoke: "false"`.
 
-Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
+Skill counts are **not hardcoded** here (they caused merge conflicts on every addition); run `./scripts/skills-count.sh` for the current totals. Skills are grouped into 17 categories. Design sub-styles (48) live under [`design-it`](design-it/SKILL.md) and are routed from there.
 
-## 🗺️ Planning & Wayfinding  (17)
+## 🗺️ Planning & Wayfinding
 
+## 🗺️ Planning & Wayfinding
 - **`analyze`** - Non-destructive cross-artifact consistency and quality analysis across a project's spec, plan, and tasks. Read-only report. Adapted from github/spec-kit (standalone, no specify CLI). Use after plan/task generation and before implementation.
 - **`ask-matt`** - Ask which skill or flow fits your situation. A router over the skills in this repo.
 - **`checklist`** - Generate a custom review checklist for a feature, spec, or plan — "unit tests for requirements writing" that validate requirements quality, not implementation. Adapted from github/spec-kit (standalone, no specify CLI).
@@ -31,8 +32,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`triage`** - Move issues and external PRs through a state machine of triage roles — categorise, verify, grill if needed, and write agent-ready briefs.
 - **`wayfinder`** - Plan a huge chunk of work — more than one agent session can hold — as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.
 
-## 🎨 Design & UX  (10)
-
+## 🎨 Design & UX
 - **`accessibility-compliance-accessibility-audit`** - You are an accessibility expert specializing in WCAG compliance, inclusive design, and assistive technology compatibility. Conduct audits, identify barriers, and provide remediation guidance.
 - **`baseline-ui`** - Quickly deslop UI code by fixing spacing, hierarchy, typography, and small layout issues. Use when the interface needs a fast cleanup or polish pass.
 - **`design-it`** - Routes frontend design tasks to 48 specific UI styles. Triggers for websites, app screens, or UI components requesting a specific aesthetic.
@@ -44,8 +44,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`ux-design`** - User-Centered Design: Nielsen heuristics, task flows, information architecture, usability evaluation. Use when designing interfaces, evaluating usability, or applying UX principles beyond visual aesthetics.
 - **`ux-writing`** - UX Writing and Microcopy: labels, error messages, empty states, tooltips, onboarding copy, tone of voice. Use when writing user-facing text in interfaces to ensure clarity, consistency, and accessibility.
 
-## 🟦 Angular Frontend  (9)
-
+## 🟦 Angular Frontend
 - **`angular`** - Modern Angular (v17-v21) development: components, services, dependency injection, routing, forms, and Standalone Components. Use for general Angular coding, SSR/hydration, or migrating apps to modern patterns.
 - **`angular-22`** - Angular 22+ modern architecture: Zoneless apps, Signals-first state, Control Flow, LinkedSignal, and Resource API. Use when the app targets Angular 22+ or uses cutting-edge reactivity and async resources.
 - **`angular-best-practices`** - Angular performance optimization and best practices guide. Use when writing, reviewing, or refactoring Angular code for optimal performance, bundle size, and rendering efficiency.
@@ -56,8 +55,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`real-time-web-stack`** - Real-time web stack: WebSocket (STOMP), Server-Sent Events (SseEmitter), and polling in Spring Boot + Angular 22. Covers reconnection strategies, heartbeats, Signal integration, and choosing between transport protocols.
 - **`web-push-notifications`** - Web Push Notifications: VAPID keys, Push API, service worker handlers, permission UX, subscription persistence in Spring Boot, web-push library, FCM Android, iOS 16.4+. Use when adding push notifications to an Angular PWA.
 
-## 🟨 React / JavaScript / TypeScript  (8)
-
+## 🟨 React / JavaScript / TypeScript
 - **`frontend-architecture`** - A portable, framework-agnostic architecture style for any React or React Native frontend. Organizes apps into feature modules with page/screen directories, a strict server-state vs UI-state split, barrel-only cross-module imports, co-located styles, and clear component-promotion rules.
 - **`frontend-developer`** - Build React components, implement responsive layouts, and handle client-side state management. Masters React 19, Next.js 15, and modern frontend architecture.
 - **`frontend-security-coder`** - Expert in secure frontend coding practices specializing in XSS prevention, output sanitization, and client-side security patterns.
@@ -67,14 +65,12 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`typescript-pro`** - Master TypeScript with advanced types, generics, and strict type safety. Handles complex type systems, decorators, and enterprise-grade patterns.
 - **`i18n-localization`** - Internationalization and localization patterns. Detecting hardcoded strings, managing translations, locale files, RTL support.
 
-## ☕ Java / Spring Boot  (3)
-
+## ☕ Java / Spring Boot
 - **`java-lts`** - Java 21 & 25 LTS language features and idioms: Record Patterns, Pattern Matching for switch, Sequenced Collections, Scoped Values, ZGC, and Loom virtual threads. Use for modern Java code style and JVM performance.
 - **`java-pro`** - Build Java applications with Spring Boot 3.x/4.x, GraalVM native images, virtual threads, and cloud-native patterns. Use when developing Spring-based services, REST APIs, or enterprise Java backends.
 - **`spring-boot`** - Enterprise Spring Boot 4.x / 3.5 LTS architecture, Virtual Threads (Project Loom), Spring AI, Declarative HTTP Clients, and Security best practices.
 
-## ⚙️ Backend (Node / Python / Go)  (6)
-
+## ⚙️ Backend (Node / Python / Go)
 - **`backend-architect`** - Backend architecture at the system level: microservices, distributed systems, event-driven design, and scalability. Use when designing overall backend structure, service boundaries, or integrations — not for writing endpoint code.
 - **`backend-dev-guidelines`** - Write production-grade backend code: routes, controllers, services, repositories, Express middleware, and Prisma database access. Use when implementing or refactoring concrete endpoint and data-access layers.
 - **`backend-security-coder`** - Expert in secure backend coding practices specializing in input validation, authentication, and API security. Use PROACTIVELY for backend security implementations or security code reviews.
@@ -82,8 +78,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`fastapi-pro`** - Build high-performance async APIs with FastAPI, SQLAlchemy 2.0, and Pydantic V2. Master microservices, WebSockets, and modern Python async patterns.
 - **`grpc-golang`** - Build production-ready gRPC services in Go with mTLS, streaming, and observability. Use when designing Protobuf contracts with Buf or implementing secure service-to-service transport.
 
-## 🔗 API & Integration  (8)
-
+## 🔗 API & Integration
 - **`api-design-principles`** - Design REST and GraphQL APIs from scratch: resource modeling, endpoints, verbs, status codes, naming, and API contracts. Use when creating a new API's design or interface.
 - **`api-patterns`** - Decide between REST, GraphQL, and tRPC for a project, then pick response formats, versioning strategy, and pagination. Use when comparing API technologies or standardizing conventions.
 - **`api-security-best-practices`** - Implement secure API design patterns including authentication, authorization, input validation, rate limiting, and protection against common API vulnerabilities
@@ -93,16 +88,14 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`mercadopago`** - Integration patterns for MercadoPago LATAM (Checkout Pro, Checkout API, Pix, Subscriptions, Webhook Security, Node/Java SDKs).
 - **`webhooks`** - Webhook design and implementation: request/response contracts, idempotency, retries with exponential backoff, HMAC signature verification, replay protection. Use when building webhook receivers or senders in Spring Boot or any backend.
 
-## 🏛️ Architecture & Diagram Patterns  (5)
-
+## 🏛️ Architecture & Diagram Patterns
 - **`archify`** - Create polished, validated architecture, workflow, sequence, data-flow, and lifecycle/state diagrams as explorable standalone HTML with inline SVG, dark/light themes, optional trace motion, and PNG/JPEG/WebP/SVG/WebM export. Accept plain-language requirements or pasted Mermaid flowchart, sequenceDiagram, and stateDiagram input.
 - **`cqrs-implementation`** - Implement Command Query Responsibility Segregation for scalable architectures. Use when separating read and write models, optimizing query performance, or building event-sourced systems.
 - **`ddd-tactical-patterns`** - Apply DDD tactical patterns in code using entities, value objects, aggregates, repositories, and domain events with explicit invariants.
 - **`domain-driven-design`** - Plan and route Domain-Driven Design work from strategic modeling to tactical implementation and evented architecture patterns.
 - **`event-sourcing-architect`** - Expert in event sourcing, CQRS, and event-driven architecture patterns. Masters event store design, projection building, saga orchestration, and eventual consistency patterns. Use PROACTIVELY for event-sourced systems, audit trail requirements, or complex domain modeling with temporal queries.
 
-## 🗄️ Database  (7)
-
+## 🗄️ Database
 - **`claimable-postgres`** - Provision instant temporary Postgres databases via Claimable Postgres by Neon (neon.new) with no login, signup, or credit card. Supports REST API, CLI, and SDK. Use when users ask for a quick Postgres environment, a throwaway DATABASE_URL for prototyping/tests, or "just give me a DB for quick testing".
 - **`database-admin`** - Operate and administer databases in production: provisioning, backups, replication, monitoring, and automation for cloud databases. Use for DB operations, incidents, and reliability.
 - **`database-architect`** - Architect the data layer from the ground up: technology selection, schema modeling, and scalable database architecture. Use when starting a new project''s persistence or choosing between database engines.
@@ -111,8 +104,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`database-optimizer`** - Tune database performance: slow queries, index optimization, EXPLAIN analysis, and scalability bottlenecks. Use when a database is slow, queries regress, or the data layer needs optimization.
 - **`drizzle-orm-expert`** - Expert in Drizzle ORM for TypeScript — schema design, relational queries, migrations, and serverless database integration. Use when building type-safe database layers with Drizzle.
 
-## 🤖 AI / LLM / Agents  (14)
-
+## 🤖 AI / LLM / Agents
 - **`ai-engineer`** - Build production-ready LLM applications, advanced RAG systems, and intelligent agents. Implements vector search, multimodal AI, agent orchestration, and enterprise AI integrations.
 - **`agent-creator`** - Create custom AI subagents with proper plugin structure, persona generation, and companion routing skills.
 - **`agent-memory`** - Use the agentMemory library (webzler/agentMemory): persistent, searchable knowledge management for AI agents. Use when integrating, configuring, or extending this specific agentMemory package.
@@ -128,13 +120,11 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`llm-structured-output`** - Get reliable JSON, enums, and typed objects from LLMs using response_format, tool_use, and schema-constrained decoding across OpenAI, Anthropic, and Google APIs. risk: safe source: community date_added: "2026-03-12
 - **`context7-mcp`** - This skill should be used when the user asks about libraries, frameworks, API references, or needs code examples. Activates for setup questions, code generation involving libraries, or mentions of specific frameworks like React, Vue, Next.js, Prisma, Supabase, etc.
 
-## 🧩 MCP Development  (2)
-
+## 🧩 MCP Development
 - **`mcp-builder`** - Design MCP (Model Context Protocol) servers that let LLMs interact with external services through well-crafted tools. Use when architecting the tool surface and behavior of an MCP server.
 - **`mcp-tool-developer`** - Build full-stack MCP (Model Context Protocol) servers from scratch in TypeScript or Python: tool implementation, testing, deployment, and registry publishing. Use when implementing or shipping an MCP server.
 
-## ☁️ DevOps & Cloud  (12)
-
+## ☁️ DevOps & Cloud
 - **`aws-cdk-development`** - AWS Cloud Development Kit (CDK) expert for building cloud infrastructure with TypeScript/Python. Use when creating CDK stacks, defining CDK constructs, implementing infrastructure as code, or when the user mentions CDK, CloudFormation, IaC, cdk synth, cdk deploy, or wants to define AWS infrastructure with Infrastructure as Code.
 - **`aws-serverless`** - Specialized skill for building production-ready serverless
 - **`gcp-cloud-run`** - Specialized skill for building production-ready serverless
@@ -148,29 +138,25 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`observability-monitoring-monitor-setup`** - You are a monitoring and observability expert specializing in implementing comprehensive monitoring solutions. Set up metrics collection, distributed tracing, log aggregation, and create insightful dashboards and alerts.
 - **`prometheus-configuration`** - Complete guide to Prometheus setup, metric collection, scrape configuration, and recording rules.
 
-## 🐚 Shell & Linux  (3)
-
+## 🐚 Shell & Linux
 - **`bash-linux`** - Bash/Linux terminal patterns. Critical commands, piping, error handling, scripting. Use when working on macOS or Linux systems.
 - **`bash-pro`** - Master of defensive Bash scripting for production automation, CI/CD
 - **`linux-shell-scripting`** - Provide production-ready shell script templates for common Linux system administration tasks including backups, monitoring, user management, log analysis, and automation. These scripts serve as building blocks for security operations and penetration testing environments.
 
-## 🔀 Git & GitHub  (4)
-
+## 🔀 Git & GitHub
 - **`git-advanced-workflows`** - Master advanced Git techniques to maintain clean history, collaborate effectively, and recover from any situation with confidence.
 - **`git-pr-workflows-git-workflow`** - Orchestrate review, tests, commits, branch pushes, and pull-request creation with parallel agents. Use when completed changes must move through validation into a PR or guarded merge.
 - **`github-automation`** - Operate GitHub issues, pull requests, branches, checks, workflows, and permissions through Rube MCP. Use when GitHub work must be queried or changed programmatically with repository-policy safeguards.
 - **`work-unit-commits`** - Plan commits as reviewable work units, not by file type. Use when splitting a feature into commits, preparing commits before a PR, keeping tests and docs with the code they explain, or turning a large change into chained/stacked PRs. Adapted from gentle-ai's work-unit-commits.
 
-## 🧪 Testing  (5)
-
+## 🧪 Testing
 - **`tdd`** - Apply test-first development (RED → GREEN → PRESERVE → REFACTOR) to a behavior change with a runnable deterministic test and a clear expected outcome. Use when implementing a requested rule or touching an existing command/option that shares changed code, and a relevant test exists. Adapted from gentle-ai's ODD test-first policy.
 - **`cypress-skill`** - Generates production-grade Cypress E2E and component tests in JavaScript or TypeScript. Supports local execution and TestMu AI cloud. Use when the user asks to write Cypress tests, set up Cypress, test with cy commands, or mentions "Cypress", "cy.visit", "cy.get", "cy.intercept".
 - **`jest-skill`** - Generates Jest unit and integration tests in JavaScript or TypeScript. Covers mocking, snapshots, async testing, and React component testing. Use when user mentions "Jest", "describe/it/expect", "jest.mock", "toMatchSnapshot". Triggers on: "Jest", "expect().toBe()", "jest.mock", "test()".
 - **`junit-5-skill`** - Generates production-grade JUnit 5 unit and integration tests in Java. Covers assertions, parameterized tests, lifecycle hooks, mocking with Mockito, and nested tests. Use when user mentions "JUnit", "JUnit 5", "@Test", "assertEquals", "Assertions", "Java unit test". Triggers on: "@Test", "Mockito", "parameterized tests".
 - **`e2e-testing`** - End-to-end testing workflow with Playwright for browser automation, visual regression, cross-browser testing, and CI/CD integration.
 
-## ⚖️ Code Quality & Engineering  (12)
-
+## ⚖️ Code Quality & Engineering
 - **`clean-code`** - This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\
 - **`review`** - Run a read-only review of a diff or PR through a selected lens (risk / readability / reliability / resilience). Report findings only; never fix. Use after a change or before merge to get an independent, risk-tiered pass. Adapted from gentle-ai's review lenses.
 - **`rdd`** - Receipt-Driven Development: freeze the exact candidate before review, set depth from the risk tier, review as a separate informational choice. Adapted from gentle-ai's RDD.
@@ -184,8 +170,7 @@ Total: **131 skills** grouped into 17 categories. Design sub-styles (48) live un
 - **`error-handling-patterns`** - Build resilient applications with robust error handling strategies that gracefully handle failures and provide excellent debugging experiences.
 - **`performance-optimization`** - Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
 
-## 🛡️ Security  (3)
-
+## 🛡️ Security
 - **`audit-skills`** - Expert security auditor for AI Skills and Bundles. Performs non-intrusive static analysis to identify malicious patterns, data leaks, system stability risks, and obfuscated payloads across Windows, macOS, Linux/Unix, and Mobile (Android/iOS).
 - **`cyber-audit`** - Run read-only exposure checks for security advisories and write a structured local audit report.
 - **`gdpr-data-handling`** - Practical implementation guide for GDPR-compliant data processing, consent management, and privacy controls.
