@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory` / `conventional-commits` / `branch-pr` / `issue-creation`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory` / `conventional-commits` / `branch-pr` / `issue-creation` / `chained-pr` / `cognitive-doc-design`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -166,7 +166,7 @@ Custom local plugins live in `~/.agent/plugins/` and are auto-loaded by OpenCode
 
 | Plugin | Hook | Purpose |
 |---|---|---|
-| `env-protection.js` | `tool.execute.before` | Blocks reads/writes of `.env` files and `export VAR=...` shell assignments to prevent secret leaks |
+| `env-protection.js` | `tool.execute.before` | Blocks file tools on sensitive paths — `.env*`, `*.pem`, `*.key`, `.netrc`, dirs `.ssh`/`.credentials`/`.gnupg`/`secrets`/`keychains`, `.aws/credentials`, `.config/gh/hosts.yml` — plus destructive `rm -rf /` `rm -rf ~` and shell assignments (`export`/`$env:`/`setx`). Ported from gentle-ai's security deny-list |
 | `notifications.js` | `event` | Native desktop notification when a session goes idle |
 | `inject-env.js` | `shell.env` | Loads `~/.agent/.env` into every agent shell |
 | `context-compaction.js` | `experimental.session.compacting` | Preserves task state across session compaction |
@@ -342,6 +342,8 @@ Piezas de método (skills portadas de [gentle-ai](https://github.com/Gentleman-P
 - **`/rdd`** — Receipt-Driven Development: **congela el candidato** antes de revisarlo, profundidad por **riesgo** del candidato, y resultado **informacional** (no autoriza commit/push/PR/release).
 - **`/judgment-day`** — review **adversarial doble ciego**: dos jueces read-only en paralelo sobre un objetivo congelado; solo se corrige lo confirmado por **ambos**; terminal `APPROVED | ESCALATED`.
 - **`/skill-creator`** — autorar skills LLM-first.
+- **`/chained-pr`** — partir cambios **>400 líneas** en stacked PRs o feature-branch chain, con diagrama de dependencias.
+- **`/cognitive-doc-design`** — escribir docs que reducen carga cognitiva (lead with the answer, progressive disclosure, chunking, signposting).
 
 Git/PR, ancladas a **estándares abiertos y neutrales** (no a la taxonomía de un vendor):
 
@@ -350,6 +352,10 @@ Git/PR, ancladas a **estándares abiertos y neutrales** (no a la taxonomía de u
 - **`/issue-creation`** — issues con **GitHub Issue Forms/templates** como autoridad de formato, vocabulario de **labels por defecto de GitHub**, y triaje con Conventional Comments.
 
 > Review y delivery son decisiones **separadas**: un review/veredicto **nunca** autoriza commit, push, PR o release. Eso sigue la política ordinaria del repo.
+
+### Seguridad por defecto (deny-list)
+
+El plugin `env-protection.js` no solo bloquea `.env`: bloquea el acceso a **claves y credenciales** (`.ssh`, `.credentials`, `.gnupg`, `secrets/`, `keychains`, `.aws/credentials`, `.config/gh/hosts.yml`, `*.pem`, `*.key`, `.netrc`) y comandos **destructivos** (`rm -rf /`, `rm -rf ~`). Portado de la deny-list de gentle-ai, ampliando nuestra protección previa (que solo cubría `.env`).
 
 ---
 
