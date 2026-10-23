@@ -148,6 +148,9 @@ Skill counts are **not hardcoded** here (they caused merge conflicts on every ad
 - **`git-pr-workflows-git-workflow`** - Orchestrate review, tests, commits, branch pushes, and pull-request creation with parallel agents. Use when completed changes must move through validation into a PR or guarded merge.
 - **`github-automation`** - Operate GitHub issues, pull requests, branches, checks, workflows, and permissions through Rube MCP. Use when GitHub work must be queried or changed programmatically with repository-policy safeguards.
 - **`work-unit-commits`** - Plan commits as reviewable work units, not by file type. Use when splitting a feature into commits, preparing commits before a PR, keeping tests and docs with the code they explain, or turning a large change into chained/stacked PRs. Adapted from gentle-ai's work-unit-commits.
+- **`conventional-commits`** - Write commit messages per the Conventional Commits v1.0.0 open standard. Use when writing or reviewing a commit message, splitting work into commits, or mapping commits to a SemVer release.
+- **`branch-pr`** - Branch naming (Conventional Branch) and pull-request flow (GitHub Flow, Conventional Commits PR title, GitHub standard issue-linking keywords). Use when creating a branch or opening/reviewing a PR. No vendor taxonomy.
+- **`issue-creation`** - Draft and triage issues using neutral standards (GitHub Issue Forms, GitHub default labels, Conventional Comments). Use when filing a bug or feature request, or triaging issues. No vendor taxonomy.
 
 ## 🧪 Testing
 - **`tdd`** - Apply test-first development (RED → GREEN → PRESERVE → REFACTOR) to a behavior change with a runnable deterministic test and a clear expected outcome. Use when implementing a requested rule or touching an existing command/option that shares changed code, and a relevant test exists. Adapted from gentle-ai's ODD test-first policy.
