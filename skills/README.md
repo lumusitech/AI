@@ -105,6 +105,8 @@ Skill counts are **not hardcoded** here (they caused merge conflicts on every ad
 - **`drizzle-orm-expert`** - Expert in Drizzle ORM for TypeScript — schema design, relational queries, migrations, and serverless database integration. Use when building type-safe database layers with Drizzle.
 
 ## 🤖 AI / LLM / Agents
+
+- **`skill-registry`** - Build a compact index of available skills (trigger + exact path) for delegation, so subagents receive exact SKILL.md paths. Use after installing, removing, creating, moving, or renaming skills. Adapted from gentle-ai's skill-registry.
 - **`ai-engineer`** - Build production-ready LLM applications, advanced RAG systems, and intelligent agents. Implements vector search, multimodal AI, agent orchestration, and enterprise AI integrations.
 - **`agent-creator`** - Create custom AI subagents with proper plugin structure, persona generation, and companion routing skills.
 - **`agent-memory`** - Use the agentMemory library (webzler/agentMemory): persistent, searchable knowledge management for AI agents. Use when integrating, configuring, or extending this specific agentMemory package.
@@ -163,6 +165,7 @@ Skill counts are **not hardcoded** here (they caused merge conflicts on every ad
 ## ⚖️ Code Quality & Engineering
 - **`clean-code`** - This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\
 - **`cognitive-doc-design`** - Design docs that reduce cognitive load (lead with the answer, progressive disclosure, chunking, signposting, recognition over recall). Use when writing guides, READMEs, RFCs, PR descriptions, architecture or onboarding docs.
+- **`skill-improver`** - Audit and upgrade existing SKILL.md files (fix frontmatter, trim body budget, convert prose to decision tables). Use when asked to audit/refactor/normalize a skill; use skill-creator for new skills. Adapted from gentle-ai's skill-improver.
 - **`review`** - Run a read-only review of a diff or PR through a selected lens (risk / readability / reliability / resilience). Report findings only; never fix. Use after a change or before merge to get an independent, risk-tiered pass. Adapted from gentle-ai's review lenses.
 - **`rdd`** - Receipt-Driven Development: freeze the exact candidate before review, set depth from the risk tier, review as a separate informational choice. Adapted from gentle-ai's RDD.
 - **`judgment-day`** - Dual blind adversarial review: two independent read-only judges on one frozen target, fix only what both confirm, at most two rounds. Adapted from gentle-ai's judgment-day.

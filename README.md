@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory` / `conventional-commits` / `branch-pr` / `issue-creation` / `chained-pr` / `cognitive-doc-design`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory` / `conventional-commits` / `branch-pr` / `issue-creation` / `chained-pr` / `cognitive-doc-design` / `skill-improver` / `skill-registry`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -344,6 +344,8 @@ Piezas de método (skills portadas de [gentle-ai](https://github.com/Gentleman-P
 - **`/skill-creator`** — autorar skills LLM-first.
 - **`/chained-pr`** — partir cambios **>400 líneas** en stacked PRs o feature-branch chain, con diagrama de dependencias.
 - **`/cognitive-doc-design`** — escribir docs que reducen carga cognitiva (lead with the answer, progressive disclosure, chunking, signposting).
+- **`/skill-improver`** — auditar/refactorizar skills existentes (frontmatter, presupuesto de cuerpo, prosa → tablas de decisión).
+- **`/skill-registry`** — índice compacto de skills (trigger → ruta) para delegación.
 
 Git/PR, ancladas a **estándares abiertos y neutrales** (no a la taxonomía de un vendor):
 
