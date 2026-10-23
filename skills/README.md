@@ -145,6 +145,7 @@ Skill counts are **not hardcoded** here (they caused merge conflicts on every ad
 
 ## 🔀 Git & GitHub
 - **`git-advanced-workflows`** - Master advanced Git techniques to maintain clean history, collaborate effectively, and recover from any situation with confidence.
+- **`chained-pr`** - Split oversized changes (over ~400 changed lines) into chained or stacked PRs that protect review focus. Use when a PR may exceed ~400 changed lines, when work-unit commits grow past that, or when the user asks for chained/stacked PRs or review slices.
 - **`git-pr-workflows-git-workflow`** - Orchestrate review, tests, commits, branch pushes, and pull-request creation with parallel agents. Use when completed changes must move through validation into a PR or guarded merge.
 - **`github-automation`** - Operate GitHub issues, pull requests, branches, checks, workflows, and permissions through Rube MCP. Use when GitHub work must be queried or changed programmatically with repository-policy safeguards.
 - **`work-unit-commits`** - Plan commits as reviewable work units, not by file type. Use when splitting a feature into commits, preparing commits before a PR, keeping tests and docs with the code they explain, or turning a large change into chained/stacked PRs. Adapted from gentle-ai's work-unit-commits.
@@ -161,6 +162,7 @@ Skill counts are **not hardcoded** here (they caused merge conflicts on every ad
 
 ## ⚖️ Code Quality & Engineering
 - **`clean-code`** - This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\
+- **`cognitive-doc-design`** - Design docs that reduce cognitive load (lead with the answer, progressive disclosure, chunking, signposting, recognition over recall). Use when writing guides, READMEs, RFCs, PR descriptions, architecture or onboarding docs.
 - **`review`** - Run a read-only review of a diff or PR through a selected lens (risk / readability / reliability / resilience). Report findings only; never fix. Use after a change or before merge to get an independent, risk-tiered pass. Adapted from gentle-ai's review lenses.
 - **`rdd`** - Receipt-Driven Development: freeze the exact candidate before review, set depth from the risk tier, review as a separate informational choice. Adapted from gentle-ai's RDD.
 - **`judgment-day`** - Dual blind adversarial review: two independent read-only judges on one frozen target, fix only what both confirm, at most two rounds. Adapted from gentle-ai's judgment-day.
