@@ -1,6 +1,6 @@
 # 🧠 Lumusitech AI Workspace
 
-> Centralized AI workspace: Streamlined curated skills (~131), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
+> Centralized AI workspace: curated skills (count with `./scripts/skills-count.sh`), custom stack skills (Angular 22+, Spring Boot 4.x, Java 21/25, MercadoPago), planning skills (Wayfinder suite, WBS, estimate-costs, plan-phases), a `/tdd` test-first skill, `review` / `rdd` / `judgment-day` / `skill-creator` / `work-unit-commits` / `memory`, and 6 core MCP integrations (`context7`, `codegraph`, `codebase-memory`, `github`, `memory`, `playwright`) synced seamlessly across macOS, Linux, WSL2, and Windows (PowerShell 7).
 
 This repository serves as the single source of truth for **OpenCode** and **Antigravity (App / IDE / CLI)**. It enforces strict architectural patterns, modern framework standards, zero-token security, and uncompromised code quality.
 
@@ -84,7 +84,7 @@ Para gestionarlo se usa **DCP** (`@tarquinen/opencode-dcp`) como guardrail, con 
 
 ## 💸 Economía de tokens y caché
 
-El coste de una sesión se divide en **prompt fijo** (system prompt + `AGENTS.md` + ~118 tools MCP + ~124 skills ≈ 22–33k tokens/turno) y **trabajo** (lo que el agente realmente hace). El prompt fijo es grande, pero con **caché de prompt** deja de ser el problema.
+El coste de una sesión se divide en **prompt fijo** (system prompt + `AGENTS.md` + los tools MCP + las skills) y **trabajo** (lo que el agente realmente hace). El prompt fijo es grande, pero con **caché de prompt** deja de ser el problema.
 
 ### Enrutado a un único provider (stickiness de caché)
 
@@ -113,7 +113,7 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 
 ```text
 ~/.agent/
-├── skills/                 # ~131 curated skills + 4 custom stack + 13 planning skills
+├── skills/                 # curated skills + custom stack + planning skills
 │   ├── wayfinder/          # 🗺️ Wayfinder suite (Matt Pocock): wayfinder, setup-matt-pocock-skills,
 │   │                       #    to-spec, grilling, grill-with-docs, research, triage
 │   ├── ask-matt/           # 🧭 Router de skills (custom, referencia /plan-phases-implement)
@@ -128,6 +128,7 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 ├── plugins/                # OpenCode custom plugins (env-protection, notifications, ...)
 ├── hooks/                  # Antigravity lifecycle hooks (env-protection, notifications)
 ├── scripts/                # memory-setup.{sh,ps1}: per-user memory path written to .env
+│                           # skills-count.sh: prints current skill totals (no hardcoded counts)
 │                           # measure-openrouter-cache.sh: auditoría de caché (cached_tokens, cache_discount)
 ├── .gitattributes          # LF line endings + binary markers (cross-platform hardening)
 ├── .editorconfig           # UTF-8 / LF / trailing-newline for editors
