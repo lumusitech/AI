@@ -34,7 +34,8 @@ link_with_skip() {
 if [ ! -f "${REPO_DIR}/.env" ]; then
     echo "⚠️  .env file missing. Creating from .env.template..."
     cp "${REPO_DIR}/.env.template" "${REPO_DIR}/.env"
-    echo "🔑 Please edit ${REPO_DIR}/.env with your actual tokens (e.g., GITHUB_TOKEN)."
+    echo "🔑 Please edit ${REPO_DIR}/.env with your tokens (SUPABASE_ACCESS_TOKEN, optional APIs)."
+    echo "   GitHub auth uses the gh keyring: run 'gh auth login' (no token needed in .env)."
 else
     echo "✅ .env configuration file exists."
 fi
@@ -45,6 +46,16 @@ if [ -f "${REPO_DIR}/.env" ]; then
     # shellcheck disable=SC1091
     source "${REPO_DIR}/.env" || true
     set +a
+fi
+
+# A GITHUB_TOKEN/GH_TOKEN exported from .env shadows the gh keyring for the whole
+# session: gh then validates that value instead of the stored OAuth token, so a
+# stale PAT breaks `gh auth status`, blocks `gh auth login` ("already logged in
+# with GITHUB_TOKEN") and makes git's credential helper fail. The github MCP reads
+# the keyring through scripts/github-mcp-bridge.mjs, so the variable is not needed.
+if [ -n "${GITHUB_TOKEN:-}${GH_TOKEN:-}" ]; then
+    echo "  ⚠️  GITHUB_TOKEN/GH_TOKEN is exported (probably from .env) and shadows the gh keyring."
+    echo "      Remove it from .env and use 'gh auth login'; set GITHUB_MCP_TOKEN only to force a token."
 fi
 
 # 2. Antigravity Configuration Links (~/.gemini/config)
@@ -510,8 +521,10 @@ MCP_BINS_VERIFY=(
   "playwright-mcp"
 )
 
-# The GitHub server expects GITHUB_PERSONAL_ACCESS_TOKEN; .env only defines GITHUB_TOKEN.
-export GITHUB_PERSONAL_ACCESS_TOKEN="${GITHUB_PERSONAL_ACCESS_TOKEN:-${GITHUB_TOKEN:-}}"
+# The MCP handshake below needs no credentials, but mcp-server-github reads
+# GITHUB_PERSONAL_ACCESS_TOKEN when invoked directly (the configured `github`
+# server uses scripts/github-mcp-bridge.mjs, which prefers the gh keyring).
+export GITHUB_PERSONAL_ACCESS_TOKEN="${GITHUB_PERSONAL_ACCESS_TOKEN:-${GITHUB_MCP_TOKEN:-${GITHUB_TOKEN:-}}}"
 
 MCP_SMOKE_JS="${TMPDIR:-/tmp}/opencode-mcp-smoke-$$.cjs"
 cat > "${MCP_SMOKE_JS}" <<'MCP_SMOKE_EOF'
