@@ -146,12 +146,70 @@ fi
 echo "  • Package manager: ${PM}"
 ( cd "${REPO_DIR}" && "${PM}" install --loglevel=error )
 
+# MCP servers are Node processes: every launcher installed in node_modules/.bin
+# is a pnpm cmd-shim whose last line is `exec node ...`. If node is missing the
+# whole MCP layer dies at startup with exit 127 ("exec: node: not found"), which
+# used to surface only as a generic "network" warning below.
+NODE_AVAILABLE=0
+NODE_REASON=""
+
+# Remediation steps shown whenever the Node runtime is missing or too old.
+# Kept in a function so the preflight and the final summary cannot drift apart.
+print_node_remediation() {
+    cat <<'NODE_HELP'
+════════════════════════════════════════════════════════════════════════════
+  ❌ Node.js is not usable — every MCP server will fail to start
+════════════════════════════════════════════════════════════════════════════
+  MCP launchers are pnpm shims whose last line is `exec node ...`, so they
+  exit with code 127 ("exec: node: not found") until Node is available.
+
+  Do the following, then re-run ./setup.sh:
+
+    1. Install Node (pick one):
+         mise use -g node@lts      # recommended — mise is the single
+                                   # toolchain manager for this workspace
+         brew install node         # alternative if you don't use mise
+
+    2. Open a NEW terminal (or run: exec zsh) and confirm it resolves:
+         node -v                   # must print a version, e.g. v26.13.0
+
+    3. Re-run the installer:
+         cd ~/.agent && ./setup.sh
+
+  This run continues (configs are linked, skills are verified) but skips the
+  postinstall steps and every MCP server, so setup is NOT complete.
+════════════════════════════════════════════════════════════════════════════
+NODE_HELP
+}
+
+if command -v node >/dev/null 2>&1; then
+    NODE_MAJOR="$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/')"
+    if [ -n "${NODE_MAJOR}" ] && [ "${NODE_MAJOR}" -lt 20 ]; then
+        NODE_REASON="node $(node -v) is too old (MCP servers need >= 20)"
+        echo "  ❌ Node runtime too old: $(node -v) ($(command -v node))"
+    else
+        NODE_AVAILABLE=1
+        echo "  • Node runtime: $(node -v) ($(command -v node))"
+    fi
+else
+    NODE_REASON="node is missing from PATH"
+    echo "  ❌ Node runtime not found on PATH"
+fi
+
+if [ "${NODE_AVAILABLE}" -eq 0 ]; then
+    print_node_remediation
+fi
+
 # codegraph-mcp fetches its native engine in postinstall; pnpm 10+ blocks build
 # scripts by default, so run it explicitly (idempotent: skips when engine present).
 CODEGRAPH_POSTINSTALL="${REPO_DIR}/node_modules/@astudioplus/codegraph-mcp/bin/postinstall.js"
 if [ -f "${CODEGRAPH_POSTINSTALL}" ]; then
     echo "  • Ensuring codegraph-mcp native engine..."
-    node "${CODEGRAPH_POSTINSTALL}" || echo "  ⚠️ codegraph-mcp engine fetch failed (network required on first install)"
+    if [ "${NODE_AVAILABLE}" -eq 1 ]; then
+        node "${CODEGRAPH_POSTINSTALL}" || echo "  ⚠️ codegraph-mcp engine fetch failed (network required on first install)"
+    else
+        echo "  ⏭️  Skipped: no usable Node runtime (see the fix steps above)"
+    fi
 fi
 
 # codebase-memory-mcp fetches its native runtime in postinstall (node install.js);
@@ -159,7 +217,11 @@ fi
 CODEBASE_MEMORY_POSTINSTALL="${REPO_DIR}/node_modules/codebase-memory-mcp/install.js"
 if [ -f "${CODEBASE_MEMORY_POSTINSTALL}" ]; then
     echo "  • Ensuring codebase-memory-mcp native runtime..."
-    node "${CODEBASE_MEMORY_POSTINSTALL}" || echo "  ⚠️ codebase-memory-mcp runtime fetch failed (network required on first install)"
+    if [ "${NODE_AVAILABLE}" -eq 1 ]; then
+        node "${CODEBASE_MEMORY_POSTINSTALL}" || echo "  ⚠️ codebase-memory-mcp runtime fetch failed (network required on first install)"
+    else
+        echo "  ⏭️  Skipped: no usable Node runtime (see the fix steps above)"
+    fi
 fi
 
 MCP_BINS=(
@@ -398,8 +460,10 @@ else
   echo "⚠️  Review and remove hardcoded secrets before committing."
 fi
 
-# 6. MCP binary availability check (installed locally, exposed on PATH)
-echo "🔎 Verifying MCP binaries on PATH..."
+# 6. MCP runtime check: launch each server and require an MCP `initialize`
+# handshake. Checking that the symlink exists is not enough: a launcher can be
+# present and still fail (exit 127) when its interpreter is missing.
+echo "🔎 Verifying MCP servers answer an MCP initialize handshake..."
 MCP_BINS_VERIFY=(
   "codebase-memory-mcp"
   "codegraph-mcp"
@@ -408,19 +472,86 @@ MCP_BINS_VERIFY=(
   "mcp-server-memory"
   "playwright-mcp"
 )
+
+# The GitHub server expects GITHUB_PERSONAL_ACCESS_TOKEN; .env only defines GITHUB_TOKEN.
+export GITHUB_PERSONAL_ACCESS_TOKEN="${GITHUB_PERSONAL_ACCESS_TOKEN:-${GITHUB_TOKEN:-}}"
+
+MCP_SMOKE_JS="${TMPDIR:-/tmp}/opencode-mcp-smoke-$$.cjs"
+cat > "${MCP_SMOKE_JS}" <<'MCP_SMOKE_EOF'
+const { spawn } = require("node:child_process");
+const bin = process.argv[2];
+const request =
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "setup-smoke", version: "1.0.0" },
+    },
+  }) + "\n";
+const child = spawn(bin, [], { env: process.env, stdio: ["pipe", "pipe", "pipe"] });
+let buf = "";
+let stderr = "";
+const fail = (reason) => {
+  process.stderr.write(reason.split("\n")[0].slice(0, 160));
+  process.exit(1);
+};
+const timer = setTimeout(() => fail("timeout waiting for initialize response"), 25000);
+child.stdout.on("data", (chunk) => {
+  buf += chunk.toString();
+  const line = buf.split("\n").find((l) => l.includes('"result"') || l.includes('"error"'));
+  if (!line) return;
+  clearTimeout(timer);
+  try {
+    const msg = JSON.parse(line);
+    if (msg.error) fail("rpc error: " + msg.error.message);
+    else process.stdout.write((msg.result?.serverInfo?.name ?? "ok") + " " + (msg.result?.serverInfo?.version ?? ""));
+  } catch {
+    fail("unparseable response");
+  }
+  child.kill("SIGKILL");
+  process.exit(0);
+});
+child.stderr.on("data", (chunk) => (stderr += chunk.toString()));
+child.on("error", (err) => fail(err.message));
+child.on("exit", (code) => {
+  clearTimeout(timer);
+  fail(stderr.trim() || "process exited with code " + code);
+});
+child.stdin.on("error", () => {});
+child.stdin.write(request);
+MCP_SMOKE_EOF
+trap 'rm -f "${MCP_SMOKE_JS}"' EXIT
+
 MCP_OK=0
 MCP_FAIL=0
+if [ "${NODE_AVAILABLE}" -eq 0 ]; then
+  echo "  ⏭️  Skipped: no usable Node runtime (${NODE_REASON})."
+  echo "     All ${#MCP_BINS_VERIFY[@]} MCP servers fail until Node is installed — follow the steps printed above."
+  MCP_FAIL="${#MCP_BINS_VERIFY[@]}"
+fi
 for bin in "${MCP_BINS_VERIFY[@]}"; do
-  if [ -e "${HOME}/.local/bin/${bin}" ]; then
-    echo "  ✅ OK    ${bin}"
+  if [ "${NODE_AVAILABLE}" -eq 0 ]; then
+    break
+  fi
+  if [ ! -e "${HOME}/.local/bin/${bin}" ]; then
+    echo "  ❌ FAIL  ${bin} (not installed; re-run setup.sh)"
+    MCP_FAIL=$((MCP_FAIL + 1))
+    continue
+  fi
+  if MCP_RESPONSE="$(node "${MCP_SMOKE_JS}" "${HOME}/.local/bin/${bin}" 2>&1)"; then
+    echo "  ✅ OK    ${bin} (${MCP_RESPONSE})"
     MCP_OK=$((MCP_OK + 1))
   else
-    echo "  ❌ FAIL  ${bin} (not installed; re-run setup.sh)"
+    echo "  ❌ FAIL  ${bin} (no MCP handshake)"
+    [ -n "${MCP_RESPONSE}" ] && echo "       ↳ ${MCP_RESPONSE}"
     MCP_FAIL=$((MCP_FAIL + 1))
   fi
 done
 if [ "${MCP_FAIL}" -gt 0 ]; then
-  echo "⚠️  ${MCP_FAIL} MCP binary(ies) missing. Re-run setup.sh to install."
+  echo "⚠️  ${MCP_FAIL} MCP server(s) failed to start. Fix the cause above and re-run setup.sh."
 fi
 
 # 7. Summary & Verification
@@ -428,7 +559,11 @@ SKILL_COUNT=$(ls -d "${REPO_DIR}/skills"/*/ 2>/dev/null | wc -l || echo "0")
 
 echo ""
 echo "======================================================================"
-echo "🎉 Setup Complete!"
+if [ "${NODE_AVAILABLE}" -eq 1 ]; then
+  echo "🎉 Setup Complete!"
+else
+  echo "⚠️  Setup finished with errors — ACTION REQUIRED below"
+fi
 echo "----------------------------------------------------------------------"
 echo "  • Total Curated Skills: ${SKILL_COUNT}"
 echo "  • Vendored Planning Skills OK/MISSING: ${VENDOR_OK}/${VENDOR_MISSING}"
@@ -451,3 +586,13 @@ echo "  📐 Phase planning:    plan-phases-create → plan-phases-implement"
 echo "  🔄 Update vendored skills:  setup.sh --refresh-vendored-skills"
 echo "  🛠️  Per-repo init: run /setup-matt-pocock-skills once in each repo"
 echo "======================================================================"
+
+if [ "${NODE_AVAILABLE}" -eq 0 ]; then
+  echo ""
+  echo "⚠️  ACTION REQUIRED — setup is incomplete (${NODE_REASON})."
+  echo "   Re-run setup.sh once these steps are done:"
+  echo "     1) mise use -g node@lts     # or: brew install node"
+  echo "     2) exec zsh && node -v      # must print a version, e.g. v26.13.0"
+  echo "     3) cd ~/.agent && ./setup.sh"
+  exit 1
+fi
