@@ -34,15 +34,15 @@ The workspace configures 6 MCP servers for OpenCode and Antigravity. They are **
 |---|---|---|---|
 | `codegraph` | `codegraph-mcp` | `@astudioplus/codegraph-mcp` | — (native binary per platform) |
 | `context7` | `context7-mcp` | `@upstash/context7-mcp` | — |
-| `github` | `mcp-server-github` | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` from `~/.agent/.env` |
+| `github` | `github-mcp-bridge` (wraps `mcp-server-github`) | `@modelcontextprotocol/server-github` | `gh auth login` (keyring); optional `GITHUB_MCP_TOKEN` |
 | `memory` | `mcp-server-memory` | `@modelcontextprotocol/server-memory` | — |
 | `playwright` | `playwright-mcp` | `@playwright/mcp` | Chrome (installed) **or** Chromium (auto-downloaded) |
-| `codebase-memory` | `codebase-memory-mcp` | `codebase-memory-mcp` | — |
+| `codebase-memory-mcp` | `codebase-memory-mcp` | `codebase-memory-mcp` | — |
 
 - **`context7`**: Official documentation lookup for libraries, frameworks, and SDKs.
 - **`codegraph`**: Graph-based repository symbol search and dependency tracking.
-- **`codebase-memory`**: Graph-based code intelligence for AI agents. Its native runtime is fetched by the package's own postinstall (same pattern as `codegraph`).
-- **`github`**: PR, issue, and workflow management authenticated via `{env:GITHUB_TOKEN}`.
+- **`codebase-memory-mcp`**: Graph-based code intelligence for AI agents. Its native runtime is fetched by the package's own postinstall (same pattern as `codegraph`).
+- **`github`**: PR, issue, and workflow management. Runs through `scripts/github-mcp-bridge.mjs`, which takes the token from the `gh` keyring (`gh auth token`) instead of a `.env` variable, so a stale PAT cannot break it.
 - **`memory`**: Long-term persistent memory across chat sessions.
 - **`playwright`**: End-to-end browser testing and UI visual inspection. Uses the **installed Chrome** when available, falling back to a downloaded **Chromium** otherwise (see below).
 
@@ -58,12 +58,16 @@ If Chrome is present the value is `chrome` (uses the system browser, no download
 
 ### Prerequisites per machine
 
-- **Node.js 18+ and npm** — required to install the local MCP packages. Install via `nvm`, your distro package manager, or https://nodejs.org.
+- **Node.js 20+** — every MCP server is a Node process (the launchers in `node_modules/.bin` end in `exec node ...`). Install it with **mise**, the single toolchain manager for this workspace:
+  ```bash
+  mise use -g node@lts
+  ```
+  `setup.sh` links `node`, `npm` and `npx` into `~/.local/bin` (pointing at the mise shims), so the background service and GUI launches resolve the runtime even when they do not inherit your shell `PATH`, and upgrading with `mise use -g node@X` keeps working.
 - **pnpm** (recommended) — used by `setup.sh` to install the local MCP packages. If absent, the setup falls back to `corepack enable pnpm`, then to `npm`.
 - **Bun** — used by OpenCode to install the DCP plugin declared in `opencode.jsonc` (`"plugin": [...]`). Install via `curl -fsSL https://bun.sh/install | bash` or your package manager.
-- **GitHub token** — `github` MCP requires `GITHUB_TOKEN`; see [Loading Credentials](#-loading-credentials-for-mcp-servers) below.
+- **GitHub CLI (`gh`) logged in** — the `github` MCP runs through `scripts/github-mcp-bridge.mjs`, which resolves the token from `gh auth token` (system keyring) first, then falls back to `GITHUB_MCP_TOKEN`, then to `GITHUB_PERSONAL_ACCESS_TOKEN`/`GITHUB_TOKEN`. A token in `.env` is optional and a stale one no longer breaks the bridge. Check with `gh auth status`.
 
-`setup.sh` installs the MCP packages and verifies their binaries are on `PATH` after setup, reporting any that are missing.
+`setup.sh` installs the MCP packages and then **starts each server and requires a real MCP `initialize` handshake**, so a missing runtime or a broken launcher fails loudly instead of being reported as a generic success.
 
 ---
 
@@ -237,18 +241,48 @@ To sync this workspace to a new machine:
    cd ~/.agent
    ```
 
-2. **Configure environment variables:**
+2. **Install the toolchain (Node via mise):**
    ```bash
-   cp .env.template .env
-   # Edit .env and set your GITHUB_TOKEN and tokens
+   # Linux / WSL2: curl https://mise.run | sh     |     macOS: brew install mise
+   mise use -g node@lts
    ```
 
-3. **Run the setup script:**
+3. **Configure environment variables:**
+   ```bash
+   cp .env.template .env
+   # Edit .env and set your tokens
+   ```
+
+4. **Authenticate the GitHub CLI** (the `github` MCP reads its token from the keyring):
+   ```bash
+   gh auth login
+   gh auth status
+   ```
+
+5. **Run the setup script:**
    ```bash
    ./setup.sh
    ```
 
 This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/{skills,AGENTS.md,mcp_config.json,hooks.json}`) and clean up legacy paths.
+
+> **WSL2 note:** a fresh WSL2 install usually does not put `~/.local/bin` on `PATH`, and that is where the MCP launchers and the `node`/`npm`/`npx` links live. `setup.sh` warns when it is missing — add `export PATH="$HOME/.local/bin:$PATH"` to your shell profile and re-run it.
+>
+> **Reloading without restarting:** after fixing a runtime or token, reload MCP servers in the running service with `opencode api post /api/location/reload --data '{}'`.
+
+### Updating an existing machine (macOS / Linux / WSL2)
+
+```bash
+cd ~/.agent
+git pull --ff-only
+mise install                                        # applies the versions pinned in ~/.config/mise/config.toml
+./setup.sh                                          # re-links configs and verifies every MCP server end to end
+opencode api post /api/location/reload --data '{}'   # reload MCP servers without restarting the service
+```
+
+`./setup.sh` exits with status `1` and prints a numbered `ACTION REQUIRED` block when Node cannot be found, instead of reporting a false success. On WSL2, confirm `~/.local/bin` is on `PATH` first (see the note above): the `node`/`npm`/`npx` links live there, and the background service resolves them from its inherited `PATH`.
+
+GitHub authentication is read from the `gh` keyring, so `gh auth status` must show a logged-in account (`gh auth login` if not). A stale `GITHUB_TOKEN` in `.env` no longer breaks the `github` MCP.
 
 ### Windows (PowerShell 7)
 
@@ -265,7 +299,7 @@ Prerequisites: PowerShell 7, Git for Windows, Node.js 18+ (npm), Bun, GitHub CLI
 2. **Configure environment variables:**
    ```powershell
    Copy-Item .env.template .env
-   # Edit .env and set your GITHUB_TOKEN and tokens
+   # Edit .env (MEMORY_FILE_PATH, optional tokens)
    ```
 
 3. **Run the setup script:**
@@ -283,11 +317,11 @@ The script configures the same links as on Unix (`~/.config/opencode` and `~/.ge
 
 **Links on Windows:** creating symbolic links requires Developer Mode (Settings → For developers) or an admin shell. `setup.ps1` detects the capability at startup: with symlink permission everything is linked live (a `git pull` propagates instantly); without it, directories use **junctions** (no admin needed) and files are **copied** — in that case re-run `setup.cmd` after every `git pull` to propagate updates.
 
-**PowerShell profile:** the script adds a block to your pwsh profile (`$PROFILE`) that loads `~/.agent/.env` into every new terminal session, so OpenCode MCP servers see `GITHUB_TOKEN` and `MEMORY_FILE_PATH`:
+**PowerShell profile:** the script adds a block to your pwsh profile (`$PROFILE`) that loads `~/.agent/.env` into every new terminal session, so OpenCode MCP servers see `MEMORY_FILE_PATH` and any optional tokens (the `github` MCP authenticates through the `gh` keyring, not this file):
 
 ```powershell
 # >>> lumusitech agent env >>>
-# Load ~/.agent/.env credentials (GITHUB_TOKEN, MEMORY_FILE_PATH, ...) for opencode MCP servers
+# Load ~/.agent/.env credentials (MEMORY_FILE_PATH, optional tokens) for opencode MCP servers
 if (Test-Path "$HOME\.agent\.env") {
     Get-Content "$HOME\.agent\.env" | ForEach-Object {
         if ($_ -match '^\s*([^#=]+)=(.*)$') {
@@ -301,7 +335,8 @@ if (Test-Path "$HOME\.agent\.env") {
 **Verify:** open a new terminal and run:
 
 ```powershell
-if ($env:GITHUB_TOKEN) { "GITHUB_TOKEN: set (len=$($env:GITHUB_TOKEN.Length))" } else { "GITHUB_TOKEN: not set" }
+if ($env:MEMORY_FILE_PATH) { "MEMORY_FILE_PATH: set" } else { "MEMORY_FILE_PATH: not set" }
+gh auth status   # the github MCP takes its token from here
 ```
 
 ### Verify vendored skills (both platforms)
@@ -388,7 +423,9 @@ For a single large task, once the plan/tickets exist, execute it phase by phase:
 
 ## 🔑 Loading Credentials for MCP Servers
 
-MCP servers that require authentication (e.g. `github`) reference tokens through environment variables in `opencode.jsonc`, like `{env:GITHUB_TOKEN}`. OpenCode reads **process environment variables**, not the `.env` file directly — so merely having `GITHUB_TOKEN` in `~/.agent/.env` is **not enough** for the MCP server to pick it up.
+MCP servers that need values from your environment declare them in `opencode.jsonc` with the `{env:VAR}` syntax (see `memory` → `MEMORY_FILE_PATH` and `playwright` → `PLAYWRIGHT_BROWSER`). OpenCode reads **process environment variables**, not the `.env` file directly — so merely having a variable in `~/.agent/.env` is **not enough** for the MCP server to pick it up.
+
+> The `github` server is the exception: it runs through `scripts/github-mcp-bridge.mjs` and takes its token from the `gh` keyring (`gh auth token`). `GITHUB_TOKEN` in `.env` is optional for it, and an expired PAT there no longer breaks the GitHub MCP. The rest of the credentials below (`MEMORY_FILE_PATH`, `PLAYWRIGHT_BROWSER`, other tokens) still need to be exported.
 
 `setup.sh` sources `.env` only within its own execution, so it never persists into your shell. You must load `~/.agent/.env` into your shell profile so every new terminal (and every app launched from it, including OpenCode) has the tokens.
 
@@ -397,7 +434,7 @@ MCP servers that require authentication (e.g. `github`) reference tokens through
 **Zsh** (macOS default, Ubuntu/Debian with zsh, WSL2):
 
 ```bash
-# Load ~/.agent/.env credentials (GITHUB_TOKEN, etc.) for opencode MCP servers
+# Load ~/.agent/.env credentials (MEMORY_FILE_PATH, optional tokens) for opencode MCP servers
 if [ -f "$HOME/.agent/.env" ]; then
     set -a
     source "$HOME/.agent/.env"
@@ -410,7 +447,7 @@ Add the block above to `~/.zshrc`.
 **Bash** (Ubuntu/Debian default, WSL2 default):
 
 ```bash
-# Load ~/.agent/.env credentials (GITHUB_TOKEN, etc.) for opencode MCP servers
+# Load ~/.agent/.env credentials (MEMORY_FILE_PATH, optional tokens) for opencode MCP servers
 if [ -f "$HOME/.agent/.env" ]; then
     set -a
     source "$HOME/.agent/.env"
@@ -424,7 +461,7 @@ Add the block above to `~/.bashrc`.
 
 ```powershell
 # >>> lumusitech agent env >>>
-# Load ~/.agent/.env credentials (GITHUB_TOKEN, MEMORY_FILE_PATH, ...) for opencode MCP servers
+# Load ~/.agent/.env credentials (MEMORY_FILE_PATH, optional tokens) for opencode MCP servers
 if (Test-Path "$HOME\.agent\.env") {
     Get-Content "$HOME\.agent\.env" | ForEach-Object {
         if ($_ -match '^\s*([^#=]+)=(.*)$') {
@@ -442,15 +479,17 @@ Add the block above to your PowerShell profile (run `notepad $PROFILE` in pwsh).
 After adding the block, open a **new terminal** and run:
 
 ```bash
-echo "GITHUB_TOKEN: ${GITHUB_TOKEN:+set (len=${#GITHUB_TOKEN})}${GITHUB_TOKEN:-not set}"
+echo "MEMORY_FILE_PATH: ${MEMORY_FILE_PATH:-not set}"
+gh auth status   # the github MCP takes its token from here
 ```
 
 ```powershell
 # PowerShell 7
-if ($env:GITHUB_TOKEN) { "GITHUB_TOKEN: set (len=$($env:GITHUB_TOKEN.Length))" } else { "GITHUB_TOKEN: not set" }
+if ($env:MEMORY_FILE_PATH) { "MEMORY_FILE_PATH: set" } else { "MEMORY_FILE_PATH: not set" }
+gh auth status
 ```
 
-If it prints `set`, your MCP servers will have access. **Important:** OpenCode must be restarted from a terminal where the variable is loaded for the MCP servers to use it.
+If `MEMORY_FILE_PATH` is set and `gh auth status` shows a logged-in account, every MCP server has what it needs. **Important:** the background service inherits the environment it was started with, so start OpenCode from a terminal where these variables are loaded, or reload with `opencode api post /api/location/reload --data '{}'`.
 
 ### ⚠️ `GITHUB_TOKEN` vs `git push --delete` (important)
 

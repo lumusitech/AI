@@ -6,12 +6,14 @@
  * the real `mcp-server-github` with `GITHUB_PERSONAL_ACCESS_TOKEN` set.
  *
  * Priority:
- *   1. Existing GITHUB_PERSONAL_ACCESS_TOKEN or GITHUB_TOKEN in the environment
- *      (explicit override — e.g. from a .env with a real PAT).
+ *   1. GITHUB_MCP_TOKEN in the environment (explicit opt-in override).
  *   2. `gh auth token` from the CLI keyring (OAuth login).
+ *   3. GITHUB_PERSONAL_ACCESS_TOKEN or GITHUB_TOKEN from the environment
+ *      (e.g. a PAT stored in .env on machines without gh).
  *
- * This avoids storing tokens in .env and lets the MCP server piggyback on
- * `gh`'s authentication without requiring a separate PAT.
+ * The keyring comes before the environment on purpose: a stale PAT exported by
+ * `.env` used to shadow a perfectly valid `gh` login and every MCP call failed
+ * with "Bad credentials", even though the server itself started fine.
  */
 import { spawn } from "node:child_process"
 import { execFileSync } from "node:child_process"
@@ -19,25 +21,49 @@ import { resolve } from "node:path"
 
 // --- Resolve token -----------------------------------------------------------
 
-function resolveToken() {
-  // 1. Explicit env override (already set by caller or .env).
-  const explicit =
-    process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_TOKEN
-  if (explicit && explicit.length > 10) return explicit
+function isUsableToken(value) {
+  // Reject empty values, unresolved placeholders (${GITHUB_TOKEN}) and
+  // obviously truncated secrets.
+  if (!value) return false
+  const token = value.trim()
+  if (token.length <= 10) return false
+  if (token.includes("${") || token.toLowerCase().includes("your_")) return false
+  return true
+}
 
-  // 2. Ask gh CLI for the token from its keyring / OAuth flow.
+function resolveToken() {
+  // 1. Explicit override for this bridge only.
+  if (isUsableToken(process.env.GITHUB_MCP_TOKEN)) {
+    return process.env.GITHUB_MCP_TOKEN.trim()
+  }
+
+  // 2. Ask gh CLI for the token from its keyring / OAuth flow. This is the
+  //    token gh itself validated, so it is the most trustworthy source.
+  //    The env is sanitized because gh prefers GITHUB_TOKEN/GH_TOKEN over the
+  //    keyring: a stale PAT inherited from .env would make `gh auth token` fail
+  //    with the very error we are trying to avoid.
+  const ghEnv = { ...process.env }
+  delete ghEnv.GITHUB_TOKEN
+  delete ghEnv.GH_TOKEN
+  delete ghEnv.GITHUB_PERSONAL_ACCESS_TOKEN
   try {
     const token = execFileSync("gh", ["auth", "token"], {
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 5_000,
       windowsHide: true,
+      env: ghEnv,
     })
       .toString()
       .trim()
-    if (token.length > 10) return token
+    if (isUsableToken(token)) return token
   } catch {
     // gh not installed or not logged in — fall through.
   }
+
+  // 3. Fall back to an explicit PAT from the environment.
+  const fromEnv =
+    process.env.GITHUB_PERSONAL_ACCESS_TOKEN || process.env.GITHUB_TOKEN
+  if (isUsableToken(fromEnv)) return fromEnv.trim()
 
   return undefined
 }
