@@ -40,6 +40,21 @@ else
     echo "✅ .env configuration file exists."
 fi
 
+# A GITHUB_TOKEN/GH_TOKEN line in .env shadows the gh keyring for the whole
+# session: gh validates that value instead of the stored OAuth token, so a stale
+# PAT breaks `gh auth status`, blocks `gh auth login` ("already logged in with
+# GITHUB_TOKEN") and makes git's credential helper fail. The github MCP reads the
+# keyring through scripts/github-mcp-bridge.mjs, so the variable is not needed.
+# Neutralise it automatically, so `git pull && ./setup.sh` is enough on any
+# machine (idempotent: only active, uncommented lines are touched).
+if [ -f "${REPO_DIR}/.env" ] \
+    && grep -qE '^[[:space:]]*(export[[:space:]]+)?(GITHUB_TOKEN|GH_TOKEN)=' "${REPO_DIR}/.env"; then
+    sed -i.bak -E 's@^([[:space:]]*(export[[:space:]]+)?)((GITHUB_TOKEN|GH_TOKEN)=)@# \3@' "${REPO_DIR}/.env"
+    rm -f "${REPO_DIR}/.env.bak"
+    echo "🧹 Commented out GITHUB_TOKEN/GH_TOKEN in .env (GitHub auth uses the gh keyring)."
+    echo "    Run 'gh auth login' once per machine; set GITHUB_MCP_TOKEN only to force a token."
+fi
+
 # Load variables if .env exists
 if [ -f "${REPO_DIR}/.env" ]; then
     set -a
@@ -48,14 +63,11 @@ if [ -f "${REPO_DIR}/.env" ]; then
     set +a
 fi
 
-# A GITHUB_TOKEN/GH_TOKEN exported from .env shadows the gh keyring for the whole
-# session: gh then validates that value instead of the stored OAuth token, so a
-# stale PAT breaks `gh auth status`, blocks `gh auth login` ("already logged in
-# with GITHUB_TOKEN") and makes git's credential helper fail. The github MCP reads
-# the keyring through scripts/github-mcp-bridge.mjs, so the variable is not needed.
+# Still exported here? Then it comes from the parent shell (e.g. a profile block
+# that loads .env), not from the file we just cleaned.
 if [ -n "${GITHUB_TOKEN:-}${GH_TOKEN:-}" ]; then
-    echo "  ⚠️  GITHUB_TOKEN/GH_TOKEN is exported (probably from .env) and shadows the gh keyring."
-    echo "      Remove it from .env and use 'gh auth login'; set GITHUB_MCP_TOKEN only to force a token."
+    echo "  ⚠️  GITHUB_TOKEN/GH_TOKEN is exported by the current shell and shadows the gh keyring."
+    echo "      .env is already clean: remove it from your shell profile and open a new terminal."
 fi
 
 # 2. Antigravity Configuration Links (~/.gemini/config)

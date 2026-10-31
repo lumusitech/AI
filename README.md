@@ -282,7 +282,7 @@ opencode api post /api/location/reload --data '{}'   # reload MCP servers withou
 
 `./setup.sh` exits with status `1` and prints a numbered `ACTION REQUIRED` block when Node cannot be found, instead of reporting a false success. On WSL2, confirm `~/.local/bin` is on `PATH` first (see the note above): the `node`/`npm`/`npx` links live there, and the background service resolves them from its inherited `PATH`.
 
-GitHub authentication is read from the `gh` keyring, so `gh auth status` must show a logged-in account (`gh auth login` if not). If an older `.env` still defines `GITHUB_TOKEN`, remove that line: it shadows the keyring for `gh` and for git's credential helper (see [Why `GITHUB_TOKEN` must stay out of `.env`](#why-github_token-must-stay-out-of-env)). A stale PAT there no longer breaks the `github` MCP, because the bridge strips it from the environment it hands to `gh`.
+GitHub authentication is read from the `gh` keyring, so `gh auth status` must show a logged-in account (`gh auth login` if not). If an older `.env` still defines `GITHUB_TOKEN`, you don't have to edit it by hand: `setup.sh` comments the line out automatically before sourcing the file, so `git pull && ./setup.sh` is enough on any machine (see [Why `GITHUB_TOKEN` must stay out of `.env`](#why-github_token-must-stay-out-of-env)). The value is preserved in the comment if you ever need it back. A stale PAT there no longer breaks the `github` MCP, because the bridge strips it from the environment it hands to `gh`.
 
 ### Windows (PowerShell 7)
 
@@ -445,7 +445,9 @@ How the current setup avoids all of it:
 3. `setup.sh` points git at `gh auth git-credential` under `env -u GITHUB_TOKEN -u GH_TOKEN`, and warns at startup when either variable is exported.
 4. `GITHUB_MCP_TOKEN` is the explicit override when you really need to force a specific token (CI, automation).
 
-If a machine still has the line in `.env`, delete it and open a new terminal: existing shells keep the exported value until they are restarted.
+`setup.sh` also **neutralises the line for you**: if `.env` still contains an active `GITHUB_TOKEN=` or `GH_TOKEN=` (with or without an `export ` prefix), it comments the line out before sourcing the file, so `git pull && ./setup.sh` is all a machine needs — no manual editing. The value is preserved in the comment, and the operation is idempotent.
+
+If the variable is still exported after that, it comes from your shell profile rather than `.env`: remove it there and open a new terminal, because existing shells keep the exported value until they are restarted.
 
 `setup.sh` sources `.env` only within its own execution, so it never persists into your shell. You must load `~/.agent/.env` into your shell profile so every new terminal (and every app launched from it, including OpenCode) has the tokens.
 
