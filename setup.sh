@@ -242,6 +242,24 @@ for bin in "${MCP_BINS[@]}"; do
     fi
 done
 
+# The MCP launchers above call bare `node`. Interactive shells get it from the
+# mise shims, but the background service and GUI launches can inherit a PATH
+# without them (that is why every server used to fail with exit 127). Exposing
+# node/npm/npx in ~/.local/bin — already present in the PATH of the service and
+# of most macOS launch contexts — makes the runtime resolvable everywhere.
+# The links point at mise's shims, not at a versioned binary, so `mise use -g
+# node@X` keeps working without re-running this script.
+if [ "${NODE_AVAILABLE}" -eq 1 ]; then
+    NODE_BIN_DIR="$(dirname "$(command -v node)")"
+    for tool in node npm npx; do
+        if [ -x "${NODE_BIN_DIR}/${tool}" ] \
+           && [ ! -e "${LOCAL_BIN_DIR}/${tool}" ] && [ ! -L "${LOCAL_BIN_DIR}/${tool}" ]; then
+            ln -sfn "${NODE_BIN_DIR}/${tool}" "${LOCAL_BIN_DIR}/${tool}"
+            echo "  ✅ Node tool on PATH: ${LOCAL_BIN_DIR}/${tool}"
+        fi
+    done
+fi
+
 # Expose archify CLI binary on PATH if installed in skills/archify
 if [ -f "${REPO_DIR}/skills/archify/bin/archify.mjs" ]; then
     chmod +x "${REPO_DIR}/skills/archify/bin/archify.mjs"
