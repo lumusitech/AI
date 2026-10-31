@@ -131,6 +131,17 @@ echo "📦 Installing local MCP servers (package.json)..."
 LOCAL_BIN_DIR="${HOME}/.local/bin"
 mkdir -p "${LOCAL_BIN_DIR}"
 
+# MCP launchers, node/npm/npx and the archify CLI are exposed as links here, so
+# this directory must be on PATH for them to resolve (fresh WSL2 images often
+# lack it).
+case ":${PATH}:" in
+    *":${LOCAL_BIN_DIR}:"*) ;;
+    *)
+        echo "  ⚠️  ${LOCAL_BIN_DIR} is not on PATH. Add this to your shell profile:"
+        echo "        export PATH=\"\$HOME/.local/bin:\$PATH\""
+        ;;
+esac
+
 if command -v pnpm >/dev/null 2>&1; then
     PM="pnpm"
 elif command -v corepack >/dev/null 2>&1; then
@@ -165,10 +176,12 @@ print_node_remediation() {
 
   Do the following, then re-run ./setup.sh:
 
-    1. Install Node (pick one):
-         mise use -g node@lts      # recommended — mise is the single
-                                   # toolchain manager for this workspace
-         brew install node         # alternative if you don't use mise
+    1. Install Node:
+         mise use -g node@lts        # recommended: mise manages the toolchain
+       No mise yet? Install it, then repeat step 1:
+         macOS:      brew install mise
+         Linux/WSL2: curl https://mise.run | sh
+       Not using mise: brew install node (macOS) or your distro's nodejs package.
 
     2. Open a NEW terminal (or run: exec zsh) and confirm it resolves:
          node -v                   # must print a version, e.g. v26.13.0
@@ -251,6 +264,12 @@ done
 # node@X` keeps working without re-running this script.
 if [ "${NODE_AVAILABLE}" -eq 1 ]; then
     NODE_BIN_DIR="$(dirname "$(command -v node)")"
+    # Prefer mise's shims when mise manages node: the shim path is stable across
+    # `mise use -g node@X` upgrades, while installs/node/<version>/bin is not.
+    MISE_SHIM_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims"
+    if [ -x "${MISE_SHIM_DIR}/node" ]; then
+        NODE_BIN_DIR="${MISE_SHIM_DIR}"
+    fi
     for tool in node npm npx; do
         if [ -x "${NODE_BIN_DIR}/${tool}" ] \
            && [ ! -e "${LOCAL_BIN_DIR}/${tool}" ] && [ ! -L "${LOCAL_BIN_DIR}/${tool}" ]; then
@@ -609,7 +628,7 @@ if [ "${NODE_AVAILABLE}" -eq 0 ]; then
   echo ""
   echo "⚠️  ACTION REQUIRED — setup is incomplete (${NODE_REASON})."
   echo "   Re-run setup.sh once these steps are done:"
-  echo "     1) mise use -g node@lts     # or: brew install node"
+  echo "     1) mise use -g node@lts   # install mise first: brew install mise | curl https://mise.run | sh"
   echo "     2) exec zsh && node -v      # must print a version, e.g. v26.13.0"
   echo "     3) cd ~/.agent && ./setup.sh"
   exit 1
