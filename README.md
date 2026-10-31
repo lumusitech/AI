@@ -144,7 +144,7 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 ├── hooks.json              # Antigravity lifecycle hooks (linked to ~/.gemini/config/hooks.json)
 ├── tui.json                # OpenCode TUI config (scroll acceleration)
 ├── package.json            # Local MCP packages installed by setup.sh (pnpm/npm)
-├── .env.template           # Template for environment variables (GITHUB_TOKEN, etc.)
+├── .env.template           # Template for environment variables (optional tokens, MCP paths)
 ├── .env                    # Local credentials file (ignored by Git)
 ├── setup.sh                # Portable setup script for Unix (macOS, Linux, WSL2)
 ├── setup.ps1               # Windows setup script (PowerShell 7)
@@ -282,7 +282,7 @@ opencode api post /api/location/reload --data '{}'   # reload MCP servers withou
 
 `./setup.sh` exits with status `1` and prints a numbered `ACTION REQUIRED` block when Node cannot be found, instead of reporting a false success. On WSL2, confirm `~/.local/bin` is on `PATH` first (see the note above): the `node`/`npm`/`npx` links live there, and the background service resolves them from its inherited `PATH`.
 
-GitHub authentication is read from the `gh` keyring, so `gh auth status` must show a logged-in account (`gh auth login` if not). A stale `GITHUB_TOKEN` in `.env` no longer breaks the `github` MCP.
+GitHub authentication is read from the `gh` keyring, so `gh auth status` must show a logged-in account (`gh auth login` if not). If an older `.env` still defines `GITHUB_TOKEN`, remove that line: it shadows the keyring for `gh` and for git's credential helper (see [Why `GITHUB_TOKEN` must stay out of `.env`](#why-github_token-must-stay-out-of-env)). A stale PAT there no longer breaks the `github` MCP, because the bridge strips it from the environment it hands to `gh`.
 
 ### Windows (PowerShell 7)
 
@@ -425,7 +425,27 @@ For a single large task, once the plan/tickets exist, execute it phase by phase:
 
 MCP servers that need values from your environment declare them in `opencode.jsonc` with the `{env:VAR}` syntax (see `memory` → `MEMORY_FILE_PATH` and `playwright` → `PLAYWRIGHT_BROWSER`). OpenCode reads **process environment variables**, not the `.env` file directly — so merely having a variable in `~/.agent/.env` is **not enough** for the MCP server to pick it up.
 
-> The `github` server is the exception: it runs through `scripts/github-mcp-bridge.mjs` and takes its token from the `gh` keyring (`gh auth token`). `GITHUB_TOKEN` in `.env` is optional for it, and an expired PAT there no longer breaks the GitHub MCP. The rest of the credentials below (`MEMORY_FILE_PATH`, `PLAYWRIGHT_BROWSER`, other tokens) still need to be exported.
+> The `github` server is the exception: it runs through `scripts/github-mcp-bridge.mjs` and takes its token from the `gh` keyring (`gh auth token`), falling back to `GITHUB_MCP_TOKEN` only when the keyring has no entry. Keep `GITHUB_TOKEN` **out** of `.env` (see below). The rest of the credentials (`MEMORY_FILE_PATH`, `PLAYWRIGHT_BROWSER`, other tokens) still need to be exported.
+
+### Why `GITHUB_TOKEN` must stay out of `.env`
+
+Sourcing `.env` with `set -a` exports every value to the whole session, and the GitHub CLI gives `GITHUB_TOKEN`/`GH_TOKEN` precedence over the OAuth token stored by `gh auth login`. A stale or fine-grained PAT there produces a confusing chain of failures:
+
+| Symptom | Cause |
+| --- | --- |
+| `gh auth status` → `Failed to log in to github.com ... token` | `gh` validates the exported PAT instead of the keyring |
+| `gh auth login` refuses, claiming you are already logged in | the exported variable wins, so it never offers a re-login |
+| `git push` / `git push --delete` fail with `403` or `Bad credentials` | git's credential helper inherits the same PAT |
+| `github` MCP tools returned `Bad credentials` (before the bridge) | the server was started with `GITHUB_PERSONAL_ACCESS_TOKEN={env:GITHUB_TOKEN}` |
+
+How the current setup avoids all of it:
+
+1. No GitHub token in `.env`; run `gh auth login` once per machine (the keyring is per machine, so WSL2 needs its own login).
+2. `opencode.jsonc` runs `github-mcp-bridge`, which calls `gh auth token` with `GITHUB_TOKEN`, `GH_TOKEN` and `GITHUB_PERSONAL_ACCESS_TOKEN` stripped from the child environment, so a leftover PAT cannot poison it.
+3. `setup.sh` points git at `gh auth git-credential` under `env -u GITHUB_TOKEN -u GH_TOKEN`, and warns at startup when either variable is exported.
+4. `GITHUB_MCP_TOKEN` is the explicit override when you really need to force a specific token (CI, automation).
+
+If a machine still has the line in `.env`, delete it and open a new terminal: existing shells keep the exported value until they are restarted.
 
 `setup.sh` sources `.env` only within its own execution, so it never persists into your shell. You must load `~/.agent/.env` into your shell profile so every new terminal (and every app launched from it, including OpenCode) has the tokens.
 
