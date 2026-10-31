@@ -46,11 +46,8 @@
     "github": {
       "type": "local",
       "command": [
-        "mcp-server-github"
-      ],
-      "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
-      }
+        "github-mcp-bridge"
+      ]
     },
     "memory": {
       "type": "local",
