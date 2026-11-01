@@ -89,7 +89,7 @@ created_at: 2026-01-16T10:00:00Z
 created_by:
   tool: opencode
   model:
-    name: deepseek-v4-flash
+    name: <provider/model>
     version: latest
     reasoning_effort: high
 ---
