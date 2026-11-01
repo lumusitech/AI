@@ -142,7 +142,8 @@ OpenCode **ignora** `disable-model-invocation` (convención de Claude/Antigravit
 ├── dcp.jsonc               # DCP plugin config: 40% threshold, permission "allow"
 ├── mcp.json                # MCP servers source (Antigravity mcp_config.json is generated from it)
 ├── hooks.json              # Antigravity lifecycle hooks (linked to ~/.gemini/config/hooks.json)
-├── tui.json                # OpenCode TUI config (scroll acceleration)
+├── tui.json                # OpenCode TUI config (scroll acceleration, legacy)
+├── cli.json                # OpenCode CLI UI config v2 (theme, diffs, session, animations, attention, scroll)
 ├── package.json            # Local MCP packages installed by setup.sh (pnpm/npm)
 ├── .env.template           # Template for environment variables (optional tokens, MCP paths)
 ├── .env                    # Local credentials file (ignored by Git)
@@ -264,7 +265,7 @@ To sync this workspace to a new machine:
    ./setup.sh
    ```
 
-This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`) and Antigravity (`~/.gemini/config/{skills,AGENTS.md,mcp_config.json,hooks.json}`) and clean up legacy paths.
+This script will automatically configure OpenCode (`~/.config/opencode/opencode.jsonc`, `cli.json`) and Antigravity (`~/.gemini/config/{skills,AGENTS.md,mcp_config.json,hooks.json}`) and clean up legacy paths.
 
 > **WSL2 note:** a fresh WSL2 install usually does not put `~/.local/bin` on `PATH`, and that is where the MCP launchers and the `node`/`npm`/`npx` links live. `setup.sh` warns when it is missing — add `export PATH="$HOME/.local/bin:$PATH"` to your shell profile and re-run it.
 >
