@@ -52,7 +52,7 @@ After the phase passes verification:
 implemented_by:
   tool: opencode
   model:
-    name: deepseek-v4-flash
+    name: <provider/model>
     version: latest
 last_implementation_at: 2026-01-16T12:00:00Z
 has_completed_all_phases: false

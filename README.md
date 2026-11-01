@@ -92,7 +92,7 @@ El coste de una sesión se divide en **prompt fijo** (system prompt + `AGENTS.md
 
 ### Enrutado a un único provider (stickiness de caché)
 
-`opencode.jsonc` fija `provider.order: ["sail-research"]` con `allow_fallbacks: true`. Motivo: la caché de prompt de OpenRouter **no cruza providers** y su *sticky routing* **se desactiva con un `order` manual**, así que repartir la carga entre varios providers garantiza miss. Se eligió `sail-research` como el provider más barato en **turno caliente** para `deepseek/deepseek-v4.1-flash`: caché a 0.1x (~860 µ$ vs ~3.380 µ$ en frío, para 32k input + 2k output).
+`opencode.jsonc` configura `provider.order: ["sail-research"]` con `allow_fallbacks: true`, pero **ya no fija un modelo por defecto**: al arrancar, OpenCode usa el **último modelo usado** (orden de selección `config → último usado → fallback del proveedor`). Motivo del `order`: la caché de prompt de OpenRouter **no cruza providers** y su *sticky routing* **se desactiva con un `order` manual**, así que repartir la carga entre varios providers garantiza miss; el `order` aplica a cualquier modelo enrutado por OpenRouter. `sail-research` se eligió como el provider más barato en **turno caliente**, medido con `deepseek/deepseek-v4.1-flash`: caché a 0.1x (~860 µ$ vs ~3.380 µ$ en frío, para 32k input + 2k output).
 
 ### Medición (la única fuente de verdad)
 

@@ -3,7 +3,6 @@
   "instructions": [
     "~/.agent/AGENTS.md"
   ],
-  "model": "openrouter/deepseek/deepseek-v4.1-flash",
   "provider": {
     "openrouter": {
       "order": [
