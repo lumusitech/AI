@@ -254,6 +254,7 @@ $OPENCODE_CONFIG_DIR = Join-Path $HOME '.config\opencode'
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'opencode.jsonc') -Source (Join-Path $REPO_DIR 'opencode.jsonc')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'dcp.jsonc')      -Source (Join-Path $REPO_DIR 'dcp.jsonc')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'tui.json')      -Source (Join-Path $REPO_DIR 'tui.json')
+Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'cli.json')      -Source (Join-Path $REPO_DIR 'cli.json')
 Link-File -Path (Join-Path $OPENCODE_CONFIG_DIR 'AGENTS.md')      -Source (Join-Path $REPO_DIR 'AGENTS.md')
 Link-Dir  -Path (Join-Path $OPENCODE_CONFIG_DIR 'plugins')        -Target (Join-Path $REPO_DIR 'plugins')
 Link-Dir  -Path (Join-Path $OPENCODE_CONFIG_DIR 'skills')         -Target (Join-Path $REPO_DIR 'skills')
@@ -714,6 +715,7 @@ Write-Host "  • MCP Bins OK/FAIL:     ${MCP_OK}/${MCP_FAIL}"
 Write-Host "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}\opencode.jsonc"
 Write-Host "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}\dcp.jsonc"
 Write-Host "  • OpenCode TUI:         ${OPENCODE_CONFIG_DIR}\tui.json"
+Write-Host "  • OpenCode CLI:         ${OPENCODE_CONFIG_DIR}\cli.json"
 Write-Host "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 Write-Host "  • Memoria Local:        $env:MEMORY_FILE_PATH (o ~/.local/share/opencode/memory/<user>.jsonl)"
 Write-Host "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}\AGENTS.md"

@@ -140,6 +140,9 @@ link_with_skip "${REPO_DIR}/plugins" "${OPENCODE_CONFIG_DIR}/plugins"
 echo "🔗 Linking tui.json to OpenCode config (${OPENCODE_CONFIG_DIR}/tui.json)..."
 link_with_skip "${REPO_DIR}/tui.json" "${OPENCODE_CONFIG_DIR}/tui.json"
 
+echo "🔗 Linking cli.json to OpenCode config (${OPENCODE_CONFIG_DIR}/cli.json)..."
+link_with_skip "${REPO_DIR}/cli.json" "${OPENCODE_CONFIG_DIR}/cli.json"
+
 echo "🔗 Linking skills to OpenCode config (${OPENCODE_CONFIG_DIR}/skills)..."
 link_with_skip "${REPO_DIR}/skills" "${OPENCODE_CONFIG_DIR}/skills"
 
@@ -633,6 +636,7 @@ echo "  • MCP Bins OK/FAIL:     ${MCP_OK}/${MCP_FAIL}"
 echo "  • OpenCode Config:      ${OPENCODE_CONFIG_DIR}/opencode.jsonc"
 echo "  • OpenCode DCP:         ${OPENCODE_CONFIG_DIR}/dcp.jsonc"
 echo "  • OpenCode TUI:         ${OPENCODE_CONFIG_DIR}/tui.json"
+echo "  • OpenCode CLI:         ${OPENCODE_CONFIG_DIR}/cli.json"
 echo "  • Playwright Browser:   ${PLAYWRIGHT_BROWSER}"
 echo "  • Memoria Local:        ${MEMORY_FILE_PATH:-~/.local/share/opencode/memory/<user>.jsonl}"
 echo "  • OpenCode Directives:  ${OPENCODE_CONFIG_DIR}/AGENTS.md"
